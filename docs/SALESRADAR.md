@@ -2,12 +2,14 @@
 
 ## Plataforma de Análise de Vendas e Inteligência Comercial
 
-**Versão:** 1.0
+**Versão:** 1.0 (concluída)
 **Autor:** Rui Almeida (RPA)
 **Início:** Fevereiro 2026
-**Stack:** Node.js / Express / PostgreSQL / React
-**Deploy:** Railway (PostgreSQL managed)
-**Repositório:** (a definir - GitHub)
+**Stack:** Node.js / Express / PostgreSQL / React (Vite)
+**Deploy:** Railway (PostgreSQL managed + Node.js)
+**URL Produção:** https://salesradar-production.up.railway.app
+**Repositório:** https://github.com/rpaalmeida-svg/salesradar (privado)
+**Estado:** ✅ Todos os 8 módulos implementados e deployed
 
 ---
 
@@ -34,158 +36,145 @@ Evolui a partir de uma ferramenta HTML standalone (Dashboard Vendas V18) para um
 
 - **Máximo previsto:** 5-6 utilizadores
 - **Atribuição de clientes:** O Administrador define cliente a cliente quais são visíveis para cada Utilizador, com opção "Todos" para dar acesso total
-- **Comissões:** O Utilizador só vê o módulo de Comissões se o Administrador tiver configurado o mapa de comissões dele. Sem mapa = sem acesso ao módulo
-- **Estratégia:** O Administrador define estratégias por cliente. Utilizadores podem ver e adicionar informações complementares. Cada Utilizador só pode editar/apagar as suas próprias contribuições. O Administrador pode editar/apagar tudo
+- **Comissões:** O Utilizador só vê o módulo de Comissões se o Administrador tiver activado a flag `can_view_comissoes` e configurado o mapa de comissões. Sem mapa = sem acesso ao módulo
+- **Estratégia:** O Administrador define estratégias por cliente. Utilizadores podem ver e adicionar informações complementares
 
-### 2.3. Autenticação
+### 2.3. Autenticação (✅ Implementado)
 
 - Login com email + password
 - O Administrador cria as contas dos utilizadores
 - Na primeira autenticação, o sistema atribui uma password temporária e obriga o Utilizador a definir a sua própria password
-- Sessões com JWT (token com expiração)
+- Sessões com JWT (token com expiração de 24h)
 - Passwords armazenadas com bcrypt (hash + salt)
 
 ---
 
-## 3. Módulos
+## 3. Módulos (✅ Todos Implementados)
 
-### 3.1. Dashboard (Todos)
+### 3.1. Dashboard (✅ Completo)
 
 Visão geral da performance de vendas:
-- Vendas totais do período (com comparação ano anterior)
-- Número de clientes activos (com variação)
-- Marca mais vendida (com comparação)
-- Contagem de categorias e marcas
-- Top 5 clientes e Top 5 categorias
-- Evolução mensal com barras comparativas (ano actual vs anterior)
+- 4 KPI cards: Vendas Totais (com variação YoY), Clientes Activos, Marcas, Categorias
+- Gráfico de barras Chart.js: Evolução Mensal com comparação ano actual vs anterior
+- Top 5 Clientes: gráfico doughnut com percentagens inline (chartjs-plugin-datalabels) + legenda com valores
+- Top 5 Marcas: ranking com barras de progresso (gradiente índigo/violeta) e percentagem
+- Top 5 Categorias: ranking com barras de progresso (gradiente verde) e percentagem
+- Agrupamento automático de sub-marcas no dashboard (Ajax*, HIKVISION*, SAFIRE*, Uniview* agrupados por regex)
+- Fonte Inter carregada via Google Fonts, aplicada globalmente ao Chart.js
 
-### 3.2. Análise de Clientes (Todos — filtrado por permissão)
+### 3.2. Análise de Clientes (✅ Completo)
 
-- Lista de clientes ordenável (A-Z, vendas ↑↓, crescimento)
-- Drill-down por cliente: métricas (total, peso %, crescimento), evolução mensal, comparação anual, top categorias e marcas do cliente
-- Top marcas mensais e trimestrais por cliente com alertas (queda >30%, subida >50%, marca nova)
+Layout duas colunas: lista (400px) + painel de detalhe sticky
+- Lista de clientes com pesquisa e ordenação (facturação, variação, peso, nome)
+- Cards de cliente: rank, nome, valor 2026, peso %, variação YoY, barra de peso
+- Painel de detalhe: 4 KPIs (facturação, peso, variação, nº marcas) + top 10 marcas com tabela de valores e percentagens
 - Utilizadores só vêem os clientes que lhes foram atribuídos
 
-### 3.3. Análise de Marcas (Todos)
+### 3.3. Análise de Marcas (✅ Completo)
 
-- Gráfico pie chart com distribuição Top 5 marcas + Outras
-- Indicador de concentração de marcas (alerta se >60%)
-- Tabela Top 10 marcas com vendas, % total, nº clientes, categorias, performance
-- Tooltips com detalhe de clientes por marca
-- Agrupamento automático de sub-marcas (ex: variantes HIKVISION, AJAX)
+Mesmo layout duas colunas:
+- Lista de marcas com pesquisa e ordenação (facturação, variação, peso, nº clientes, nome)
+- Cards de marca: rank, nome, contagem de clientes, valor, peso %, variação YoY
+- Painel de detalhe: 4 KPIs + top 10 clientes da marca com valores e percentagens
 
-### 3.4. Análise de Categorias (Todos)
+### 3.4. Análise de Categorias (✅ Completo)
 
-- Ranking de categorias por volume de vendas
-- Comparação anual por categoria
-- Peso percentual de cada categoria
+Mesmo layout duas colunas:
+- Lista de categorias com pesquisa e ordenação
+- Cards de categoria: rank, nome, contagem de clientes, valor, peso %, variação YoY
+- Painel de detalhe: clientes que compraram a categoria com breakdown de valores
+- Rota backend dedicada: `GET /api/vendas/category-clients?year=X&category=Y`
 
-### 3.5. Insights (Todos)
+### 3.5. Insights (✅ Completo)
 
-- Geração automática de alertas e observações com base nos dados:
-  - Clientes com queda significativa
-  - Marcas em crescimento ou declínio
-  - Concentração de risco (dependência de poucos clientes/marcas)
-  - Oportunidades de cross-sell
-- Cards com código de cor: info (azul), warning (amarelo), success (verde), danger (vermelho)
+Geração automática de alertas com base nos dados:
+- **Clientes em Queda:** ≥30% queda na média mensal (crítico se ≥60%)
+- **Clientes em Crescimento:** ≥30% aumento na média mensal
+- **Clientes Perdidos:** tinham vendas no ano anterior, zero no actual (se >500€)
+- **Novos Clientes:** novos no ano actual com >500€
+- **Alta Concentração:** cliente top >40% do total (aviso de risco)
+- **Marcas em Crescimento:** ≥50% aumento na média mensal (se >1000€)
+- **Marcas em Queda:** ≥40% queda na média mensal
+- Comparação proporcional mensal (ajusta automaticamente para anos parciais)
 
-### 3.6. Estratégia (Todos — com regras de edição)
+Interface:
+- 4 summary cards: Críticos, Avisos, Positivos, Total
+- Filtro por severidade (critical/warning/success) e categoria
+- Cards com código de cor e ícones (🔴⚠️🟢)
 
-- Fichas de estratégia por cliente
-- Campos: objectivo, acções planeadas, concorrência (nome + força), notas, estado
-- **Administrador:** cria, edita e apaga qualquer estratégia
-- **Utilizador:** pode ver todas as estratégias dos seus clientes, adicionar informações/notas, mas só pode editar ou apagar as contribuições que ele próprio criou
-- Histórico de contribuições com identificação do autor
-- Export/Import de estratégias
+### 3.6. Estratégia (✅ Completo)
 
-### 3.7. Objectivos de Facturação (Todos)
+Fichas de estratégia por cliente com suporte multi-concorrentes:
+- Campos: cliente, objectivo, acções (textarea), concorrentes (até 5), notas, estado
+- **Multi-concorrentes:** cada concorrente tem nome + força (fraco/médio/forte/dominante)
+- Serialização inteligente: 1 concorrente → campos simples, 2+ → JSON no campo competitor_name
+- Parse function lida com formato antigo (string) e novo (JSON array)
+- Tags de força com cores (verde/amarelo/vermelho/vermelho escuro)
+- Estados: pendente, em_curso, concluído, cancelado
+- Summary cards com filtro por clique
+- Modal com linhas dinâmicas de concorrentes (adicionar/remover)
+
+### 3.7. Objectivos de Facturação (✅ Completo)
 
 - Definição de objectivos anuais por cliente (pelo Administrador)
-- Tracking de progresso com barras visuais e estados (atingido/próximo/longe)
-- Visão geral com resumo de objectivos totais vs facturação real
-- Possibilidade de ocultar clientes sem objectivo definido
+- Modal multi-objectivos: definir vários objectivos de uma vez com linhas dinâmicas (cliente + valor)
+- Dropdown inteligente: exclui clientes que já têm objectivo e os já seleccionados noutras linhas
+- Tracking de progresso com barras visuais e marcador de posição esperada (traço preto)
+- Cálculo de estado: No Caminho (actual ≥ esperado), Em Risco (≥70% do esperado), Atrasado (<70%)
+- Projecção anual baseada na média mensal actual
+- Summary cards: Objectivo Total, Realizado (com %), No Caminho, Em Risco/Atrasado
+- Tabela ordenada por valor de objectivo (decrescente)
+- Card de aviso: clientes sem objectivo definido (com facturação actual)
 
-### 3.8. Comissões (Condicional)
+### 3.8. Comissões (✅ Completo)
 
 **Visibilidade:**
-- O Administrador faz upload do mapa de comissões de cada Utilizador (ficheiro Excel)
-- Se o mapa não estiver carregado, o módulo não aparece para esse Utilizador
-- O Administrador pode dar permissão individual para o Utilizador ver as suas próprias comissões
+- Controlada pela flag `can_view_comissoes` na tabela users (toggle no painel Admin)
+- Admin vê tudo, utilizador só vê o seu mapa
 
-**Estrutura do Mapa de Comissões:**
+**Upload OCR (Admin):**
+- Zona de drag & drop para arrastar imagem do mapa de comissões
+- Envio para Claude Vision API (claude-sonnet-4-20250514) com prompt estruturado
+- Extracção automática dos 3 colunas: semestre, ano, comissão (formato europeu → numérico)
+- Detecção da linha TARGET (verde, índice) e MÁXIMO (vermelho, índice)
+- Detecção do nome do vendedor
+- Tabela editável com todos os escalões para confirmação/correcção antes de gravar
+- Linhas target e max destacadas com cor e label
 
-O mapa é uma tabela de escalões com 3 colunas:
-
-| SEMESTRE (P. Gran Cuenta) | AÑO (P. Gran Cuenta) | Prémio (Nome Utilizador) |
-|---------------------------|----------------------|--------------------------|
-| 622.279,16 | 1.526.742,86 | 64,14 |
-| 631.786,40 | 1.550.068,57 | 93,32 |
-| ... | ... | ... |
-| **717.351,53** (objectivo base) | **1.760.000,00** | **2.727,30** |
-| ... | ... | ... |
-| **809.058,40** (tecto máximo) | **1.985.000,00** | **6.000,06** |
-
-- Cada linha é um escalão progressivo
-- **Coluna 1 (Semestre):** threshold de facturação do semestre
-- **Coluna 2 (Ano):** threshold de facturação acumulada anual
-- **Coluna 3 (Prémio):** valor do prémio correspondente ao escalão
-- O objectivo base é assinalado (verde no original) e o tecto máximo também (vermelho)
-
-**Mecânica de pagamento:**
-- **Julho:** pagamento do 1º semestre — o sistema avalia a facturação do semestre (Jan-Jun) contra a coluna Semestre e determina o escalão atingido e o prémio correspondente
-- **Janeiro (ano seguinte):** pagamento do 2º semestre — o sistema avalia a facturação acumulada do ano (Jan-Dez) contra a coluna Ano e determina o escalão/prémio. O prémio do 2º semestre é este valor menos o que já foi pago em Julho
-
-**Upload do mapa:**
-- O Administrador faz upload de uma **imagem** (screenshot/print) da tabela de comissões
-- O sistema usa **AI Vision (Claude API)** para extrair automaticamente os valores da tabela (OCR)
-- Os dados extraídos são apresentados ao Admin num formulário editável para **confirmação e correcção** antes de gravar
-- Fluxo: Upload imagem → OCR extrai dados → Admin confirma/corrige → Grava na BD
-- O Admin pode também adicionar/remover/editar escalões manualmente após a extracção
-- Marcar escalão objectivo (verde/base) e tecto máximo (vermelho) manualmente ou via indicação na imagem
-- Imagem original é guardada como referência
-
-**Funcionalidades (Administrador):**
-- Upload de mapa de comissões por utilizador (Excel)
-- Factor de correcção configurável
-- Visualização do mapa de qualquer utilizador
-- Comparação facturação real vs comissão esperada (por utilizador)
-- Simulação de cenários
-- Export de tabela de comissões
-- Marcação do escalão objectivo (base) e tecto máximo
-
-**Funcionalidades (Utilizador com permissão):**
-- Ver o seu mapa de comissões com os escalões
-- Ver o escalão actual atingido e progresso para o próximo
-- Ver estimativa de comissão com base na facturação actual (semestre e ano)
-- Comparar facturação vs comissão esperada
-- Visualização do quanto falta para o próximo escalão
+**Visualização (Todos com permissão):**
+- 4 KPIs: Facturação do ano, Desconto Devoluções (slider 0-15%), Facturação Ajustada, Comissão Actual
+- Slider de desconto em tempo real (para descontar devoluções/créditos que inflacionam a facturação)
+- Card de gap: quanto falta para o próximo escalão
+- Tabela completa de escalões com destaque visual do escalão actual (◀), target (amarelo), máximo (vermelho)
+- Opacidade reduzida nos escalões não atingidos
 
 ---
 
 ## 4. Gestão de Dados
 
-### 4.1. Upload de Dados
+### 4.1. Upload de Dados (✅ Implementado)
 
 - **Apenas o Administrador** faz upload de dados
-- Formato: Excel (.xlsx, .xls) ou CSV
-- O sistema processa o ficheiro e extrai a estrutura hierárquica: Mês → Cliente → Categoria → Marca → Valor
-- Parsing baseado em indentação (níveis de espaços) — lógica já existente na V18
+- Formato: Excel (.xlsx, .xls) — multer com limite 10MB
+- Parser inteligente com detecção de colunas: analisa primeiras 100 linhas, encontra coluna numérica mais à direita
+- Estrutura hierárquica por indentação: 5 espaços = Mês, 10 = Cliente, 15 = Categoria, 20 = Marca
+- Detecção automática do ano a partir dos nomes dos meses
 
-### 4.2. Histórico
+### 4.2. Histórico (✅ Implementado)
 
-- Cada upload é guardado na BD com timestamp e referência ao ano/período
-- Dados de anos anteriores são mantidos para comparação e análise de tendências
-- O histórico acumulado alimenta os módulos de análise preditiva (fase futura)
+- Cada upload guardado com timestamp, filename, contagem de registos
+- Dados de anos anteriores mantidos para comparação YoY
+- Estado actual validado: 2025 = 3398 registos (2.792.897,61€), 2026 = 462 registos (487.356,53€)
 
-### 4.3. Persistência
+### 4.3. Persistência (✅ Implementado)
 
-- Todos os dados (vendas, estratégias, objectivos, comissões, configurações) ficam em PostgreSQL
-- Elimina a dependência de localStorage do browser
+- Todos os dados em PostgreSQL (Railway managed)
+- Eliminada dependência de localStorage
 - Dados partilhados entre utilizadores conforme permissões
 
 ---
 
-## 5. Análise Preditiva (Fase 2)
+## 5. Análise Preditiva (Fase 2 — Futuro)
 
 Com dados históricos acumulados ao longo do tempo, o sistema evoluirá para incluir:
 
@@ -195,15 +184,12 @@ Com dados históricos acumulados ao longo do tempo, o sistema evoluirá para inc
 
 ### 5.2. Sazonalidade
 - Identificação de padrões de compra por cliente e marca
-- Ex: "Cliente X compra mais AJAX em Q1 e Q3"
 
 ### 5.3. Previsão de Volume
 - Estimativa de vendas do mês seguinte por cliente/marca com base em tendências históricas
-- Médias móveis e desvios padrão (não requer ML pesado para começar)
 
 ### 5.4. Oportunidades de Cross-sell
 - Detecção de gaps: "Cliente comprou NVRs mas não comprou discos"
-- Sugestões automáticas de produtos complementares
 
 ### 5.5. Scoring de Risco
 - Classificação de clientes por risco de churn, oportunidade de crescimento, e valor estratégico
@@ -212,101 +198,110 @@ Com dados históricos acumulados ao longo do tempo, o sistema evoluirá para inc
 
 ## 6. Design e UX
 
-### 6.1. Princípios
+### 6.1. Princípios (✅ Implementado)
 - **Apple Style:** limpo, profissional, elegante
-- Fontes: Inter ou SF Pro (sem fontes grandes ou agressivas)
-- Cores: paleta suave — primary (#667eea → tons de índigo/violeta), backgrounds claros (#fafafa, #f9fafb), texto (#1f2937, #374151)
-- Espaçamento generoso, cantos arredondados (12px), sombras subtis
-- Sem cores garridas ou elementos visuais pesados
-- Responsivo mas orientado para desktop (uso principal)
+- Fonte: Inter (Google Fonts) — carregada globalmente incluindo Chart.js
+- Cores: paleta suave — primary gradient (#667eea → #764ba2), backgrounds claros (#fafafa, #f9fafb), texto (#1f2937, #374151)
+- Espaçamento generoso, cantos arredondados (8-12px), sombras subtis
+- Orientado para desktop (uso principal)
 
-### 6.2. Layout
-- Sidebar de navegação fixa (esquerda) com ícones + labels
-- Header com nome do utilizador, período activo, botão logout
-- Área de conteúdo principal com cards e secções
-- Transições suaves entre módulos
+### 6.2. Layout (✅ Implementado)
+- Sidebar de navegação fixa (esquerda, 240px) com ícones + labels
+- Header com nome do utilizador e botão logout
+- Área de conteúdo principal com padding 32px
+- Sidebar items dinâmicos conforme perfil (Admin vê Administração e Comissões, User vê conforme permissões)
 
-### 6.3. Componentes Visuais
-- Cards com bordas subtis (#e5e7eb)
-- Gráficos com Chart.js (já usado na V18)
-- Tabelas com hover states e formatação condicional
+### 6.3. Landing Page (✅ Implementado)
+- Hero section com título animado e gradient
+- Feature cards com animação hover
+- Modal de login sobreposto à landing page
+- Design profissional e convidativo
+
+### 6.4. Componentes Visuais (✅ Implementado)
+- Cards com bordas subtis (#e5e7eb) e border-left coloridos para KPIs
+- Chart.js com chartjs-plugin-datalabels para percentagens inline
+- Tabelas flex com hover states
 - Tags de estado com cores suaves (verde/amarelo/vermelho em tons pastel)
-- Progress bars para objectivos e escalões
-- Tooltips informativos nos hover de elementos-chave
+- Progress bars com marcador de posição esperada
+- Badges coloridos para força de concorrentes
+- Styling: inline styles (sem Tailwind, sem CSS modules)
 
 ---
 
 ## 7. Arquitectura Técnica
 
-### 7.1. Stack
+### 7.1. Stack (✅ Definido e Implementado)
 
 | Camada | Tecnologia |
 |--------|------------|
-| Frontend | React + Vite |
-| Styling | Tailwind CSS ou CSS Modules (a decidir) |
-| Gráficos | Chart.js |
-| Backend | Node.js + Express |
-| Base de Dados | PostgreSQL (Railway managed) |
-| ORM | Prisma ou queries directas com pg (a decidir) |
-| Autenticação | JWT + bcrypt |
-| Upload/Parse | SheetJS (xlsx) — já usado na V18 |
-| OCR / Vision | Anthropic Claude API (claude-sonnet-4-5) — extracção de tabelas de imagens |
-| File Storage | Railway persistent storage ou S3 (para imagens de mapas) |
-| Deploy | Railway |
+| Frontend | React 19 + Vite 7 |
+| Routing | React Router DOM 7 |
+| Styling | Inline styles (Apple-inspired) |
+| Gráficos | Chart.js 4.5 + chartjs-plugin-datalabels 2.2 |
+| HTTP Client | Axios 1.13 |
+| Backend | Node.js + Express 4.18 |
+| Base de Dados | PostgreSQL (Railway managed) — queries directas com pg |
+| Autenticação | JWT (jsonwebtoken 9) + bcryptjs 2.4 |
+| Upload/Parse | multer 1.4 + SheetJS (xlsx 0.18) |
+| OCR / Vision | Anthropic Claude API (@anthropic-ai/sdk) — claude-sonnet-4-20250514 |
+| Deploy | Railway (single service: backend serve frontend build) |
 
-### 7.2. Estrutura do Projecto
+### 7.2. Estrutura do Projecto (✅ Real)
 
 ```
 salesradar/
-├── client/                    # React frontend
+├── backend/
+│   ├── db/
+│   │   ├── pool.js              # Conexão PostgreSQL
+│   │   └── schema.sql           # Schema completo
+│   ├── middleware/
+│   │   └── auth.js              # JWT verification + admin middleware
+│   ├── routes/
+│   │   ├── auth.js              # Login, change password, me
+│   │   ├── admin.js             # CRUD utilizadores, atribuição clientes
+│   │   ├── upload.js            # Upload e parsing Excel
+│   │   ├── vendas.js            # Queries de vendas (summary, by-client, by-brand, etc)
+│   │   ├── estrategia.js        # CRUD estratégias
+│   │   ├── objetivos.js         # CRUD objectivos
+│   │   ├── comissoes.js         # Comissões + OCR endpoint
+│   │   └── insights.js          # Geração automática de insights
+│   ├── services/
+│   │   └── parser.js            # Lógica de parsing Excel com indentação
+│   ├── server.js                # Express server + serve frontend dist
+│   ├── package.json
+│   └── .env                     # Variáveis de ambiente (não no git)
+├── frontend/
 │   ├── src/
-│   │   ├── components/        # Componentes reutilizáveis
-│   │   ├── pages/             # Páginas/módulos
+│   │   ├── components/
+│   │   │   └── Layout.jsx       # Sidebar + header + routing
+│   │   ├── context/
+│   │   │   └── AuthContext.jsx   # Auth state management
+│   │   ├── pages/
+│   │   │   ├── Login.jsx        # Landing page + modal login
+│   │   │   ├── ChangePassword.jsx
 │   │   │   ├── Dashboard.jsx
 │   │   │   ├── Clientes.jsx
 │   │   │   ├── Marcas.jsx
 │   │   │   ├── Categorias.jsx
 │   │   │   ├── Insights.jsx
 │   │   │   ├── Estrategia.jsx
-│   │   │   ├── Objetivos.jsx
+│   │   │   ├── Objectivos.jsx
 │   │   │   ├── Comissoes.jsx
-│   │   │   ├── Admin.jsx      # Gestão utilizadores/permissões
-│   │   │   └── Login.jsx
-│   │   ├── hooks/             # Custom hooks
-│   │   ├── context/           # Auth context, data context
-│   │   ├── services/          # API calls
-│   │   ├── utils/             # Formatação, helpers
-│   │   └── App.jsx
+│   │   │   └── Admin.jsx        # Tabs: Utilizadores, Upload, Atribuir Clientes
+│   │   ├── services/
+│   │   │   └── api.js           # Axios instance com interceptors JWT
+│   │   ├── App.jsx              # Routing
+│   │   └── main.jsx
+│   ├── index.html               # Inter font + meta
+│   ├── vite.config.js
 │   └── package.json
-├── server/                    # Node.js backend
-│   ├── routes/
-│   │   ├── auth.js
-│   │   ├── upload.js
-│   │   ├── vendas.js
-│   │   ├── clientes.js
-│   │   ├── estrategia.js
-│   │   ├── objetivos.js
-│   │   ├── comissoes.js
-│   │   └── admin.js
-│   ├── middleware/
-│   │   ├── auth.js            # JWT verification
-│   │   └── permissions.js     # Role-based access
-│   ├── services/
-│   │   ├── parser.js          # Lógica de parsing Excel
-│   │   ├── ocr.js             # Extracção de tabelas via AI Vision
-│   │   ├── insights.js        # Geração de insights
-│   │   └── predictions.js     # Análise preditiva (fase 2)
-│   ├── db/
-│   │   ├── schema.sql         # Schema PostgreSQL
-│   │   └── queries.js         # Queries SQL
-│   ├── uploads/               # Imagens de mapas de comissões
-│   ├── server.js
-│   └── package.json
-├── SALESRADAR.md              # Este documento
-└── README.md
+├── docs/
+│   └── SALESRADAR.md            # Este documento
+├── package.json                 # Root: postinstall builds frontend
+└── .gitignore                   # node_modules, .env, dist, uploads
 ```
 
-### 7.3. Schema da Base de Dados
+### 7.3. Schema da Base de Dados (✅ Implementado)
 
 ```sql
 -- Utilizadores
@@ -315,9 +310,9 @@ CREATE TABLE users (
     email VARCHAR(255) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
     name VARCHAR(255) NOT NULL,
-    role VARCHAR(20) NOT NULL DEFAULT 'user',  -- 'admin' ou 'user'
-    temp_password BOOLEAN DEFAULT true,         -- true = obriga a mudar password
-    can_view_comissoes BOOLEAN DEFAULT false,   -- permissão de ver comissões
+    role VARCHAR(20) NOT NULL DEFAULT 'user',
+    temp_password BOOLEAN DEFAULT true,
+    can_view_comissoes BOOLEAN DEFAULT false,
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()
 );
@@ -327,19 +322,19 @@ CREATE TABLE uploads (
     id SERIAL PRIMARY KEY,
     filename VARCHAR(255) NOT NULL,
     year INTEGER NOT NULL,
-    period_start VARCHAR(50),       -- ex: "enero 2025"
-    period_end VARCHAR(50),         -- ex: "diciembre 2025"
+    period_start VARCHAR(50),
+    period_end VARCHAR(50),
     record_count INTEGER,
     uploaded_by INTEGER REFERENCES users(id),
     uploaded_at TIMESTAMP DEFAULT NOW()
 );
 
--- Dados de vendas (registos individuais)
+-- Dados de vendas
 CREATE TABLE sales_data (
     id SERIAL PRIMARY KEY,
     upload_id INTEGER REFERENCES uploads(id) ON DELETE CASCADE,
     year INTEGER NOT NULL,
-    month VARCHAR(50) NOT NULL,     -- ex: "enero 2025"
+    month VARCHAR(50) NOT NULL,
     client VARCHAR(255) NOT NULL,
     category VARCHAR(255),
     brand VARCHAR(255),
@@ -352,28 +347,28 @@ CREATE TABLE user_clients (
     id SERIAL PRIMARY KEY,
     user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
     client_name VARCHAR(255) NOT NULL,
-    all_clients BOOLEAN DEFAULT false,  -- true = vê todos
+    all_clients BOOLEAN DEFAULT false,
     assigned_by INTEGER REFERENCES users(id),
     assigned_at TIMESTAMP DEFAULT NOW(),
     UNIQUE(user_id, client_name)
 );
 
--- Estratégias por cliente
+-- Estratégias (suporta multi-concorrentes via JSON)
 CREATE TABLE strategies (
     id SERIAL PRIMARY KEY,
     client_name VARCHAR(255) NOT NULL,
     objective TEXT,
     actions TEXT,
     competitor_name VARCHAR(255),
-    competitor_strength VARCHAR(50),  -- 'forte', 'media', 'fraca', 'desconhecida'
+    competitor_strength VARCHAR(50),
     notes TEXT,
-    status VARCHAR(50) DEFAULT 'pendente',  -- 'pendente', 'em curso', 'concluido'
+    status VARCHAR(50) DEFAULT 'pendente',
     created_by INTEGER REFERENCES users(id),
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()
 );
 
--- Contribuições dos utilizadores às estratégias
+-- Contribuições às estratégias
 CREATE TABLE strategy_contributions (
     id SERIAL PRIMARY KEY,
     strategy_id INTEGER REFERENCES strategies(id) ON DELETE CASCADE,
@@ -383,7 +378,7 @@ CREATE TABLE strategy_contributions (
     updated_at TIMESTAMP DEFAULT NOW()
 );
 
--- Objectivos de facturação por cliente
+-- Objectivos de facturação
 CREATE TABLE objectives (
     id SERIAL PRIMARY KEY,
     client_name VARCHAR(255) NOT NULL,
@@ -396,49 +391,49 @@ CREATE TABLE objectives (
     UNIQUE(client_name, year)
 );
 
--- Mapas de comissões por utilizador
+-- Mapas de comissões
 CREATE TABLE commission_maps (
     id SERIAL PRIMARY KEY,
     user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
     year INTEGER NOT NULL,
     correction_factor DECIMAL(5,2) DEFAULT 1.00,
-    target_tier INTEGER,            -- índice do escalão objectivo (verde)
-    max_tier INTEGER,               -- índice do escalão tecto máximo (vermelho)
-    original_filename VARCHAR(255), -- nome do ficheiro de imagem original
-    original_image_path VARCHAR(500), -- path da imagem guardada no servidor
+    target_tier INTEGER,
+    max_tier INTEGER,
+    original_filename VARCHAR(255),
+    original_image_path VARCHAR(500),
     created_by INTEGER REFERENCES users(id),
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW(),
     UNIQUE(user_id, year)
 );
 
--- Escalões de comissão (uma linha por escalão do mapa)
+-- Escalões de comissão
 CREATE TABLE commission_tiers (
     id SERIAL PRIMARY KEY,
     commission_map_id INTEGER REFERENCES commission_maps(id) ON DELETE CASCADE,
     tier_order INTEGER NOT NULL,
-    semester_threshold DECIMAL(12,2) NOT NULL,  -- coluna Semestre (P. Gran Cuenta)
-    year_threshold DECIMAL(12,2) NOT NULL,      -- coluna Ano (P. Gran Cuenta)
-    bonus DECIMAL(12,2) NOT NULL,               -- coluna Prémio
+    semester_threshold DECIMAL(12,2) NOT NULL,
+    year_threshold DECIMAL(12,2) NOT NULL,
+    bonus DECIMAL(12,2) NOT NULL,
     UNIQUE(commission_map_id, tier_order)
 );
 
--- Pagamentos de comissões efectuados
+-- Pagamentos de comissões
 CREATE TABLE commission_payments (
     id SERIAL PRIMARY KEY,
     user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
     commission_map_id INTEGER REFERENCES commission_maps(id),
     year INTEGER NOT NULL,
-    period VARCHAR(10) NOT NULL,     -- 'S1' (Julho) ou 'S2' (Janeiro)
-    tier_reached INTEGER,            -- escalão atingido
-    billing_value DECIMAL(12,2),     -- facturação real do período
-    bonus_calculated DECIMAL(12,2),  -- prémio calculado
-    bonus_paid DECIMAL(12,2),        -- prémio efectivamente pago (S2 = total - já pago S1)
+    period VARCHAR(10) NOT NULL,
+    tier_reached INTEGER,
+    billing_value DECIMAL(12,2),
+    bonus_calculated DECIMAL(12,2),
+    bonus_paid DECIMAL(12,2),
     paid_at TIMESTAMP,
     created_at TIMESTAMP DEFAULT NOW()
 );
 
--- Índices para performance
+-- Índices
 CREATE INDEX idx_sales_year ON sales_data(year);
 CREATE INDEX idx_sales_client ON sales_data(client);
 CREATE INDEX idx_sales_month ON sales_data(month);
@@ -452,7 +447,7 @@ CREATE INDEX idx_commission_payments_user ON commission_payments(user_id, year);
 
 ---
 
-## 8. API Endpoints
+## 8. API Endpoints (✅ Todos Implementados)
 
 ### 8.1. Autenticação
 
@@ -472,40 +467,35 @@ CREATE INDEX idx_commission_payments_user ON commission_payments(user_id, year);
 | DELETE | /api/admin/users/:id | Remover utilizador | Admin |
 | POST | /api/admin/users/:id/clients | Atribuir clientes | Admin |
 | GET | /api/admin/users/:id/clients | Ver clientes atribuídos | Admin |
-| PUT | /api/admin/users/:id/permissions | Alterar permissões | Admin |
 
 ### 8.3. Upload e Dados
 
 | Método | Endpoint | Descrição | Acesso |
 |--------|----------|-----------|--------|
-| POST | /api/upload | Upload de ficheiro Excel/CSV | Admin |
-| GET | /api/uploads | Listar uploads (histórico) | Admin |
-| DELETE | /api/uploads/:id | Remover upload e dados | Admin |
-| GET | /api/vendas/summary | Resumo vendas (filtrado por permissão) | Autenticado |
-| GET | /api/vendas/by-client | Vendas por cliente | Autenticado |
-| GET | /api/vendas/by-brand | Vendas por marca | Autenticado |
-| GET | /api/vendas/by-category | Vendas por categoria | Autenticado |
-| GET | /api/vendas/monthly | Evolução mensal | Autenticado |
-| GET | /api/vendas/compare/:year1/:year2 | Comparação entre anos | Autenticado |
+| POST | /api/upload | Upload de ficheiro Excel | Admin |
+| GET | /api/vendas/years | Anos disponíveis | Autenticado |
+| GET | /api/vendas/summary?year= | Resumo vendas | Autenticado |
+| GET | /api/vendas/by-client?year= | Vendas por cliente | Autenticado |
+| GET | /api/vendas/by-brand?year= | Vendas por marca | Autenticado |
+| GET | /api/vendas/by-category?year= | Vendas por categoria | Autenticado |
+| GET | /api/vendas/monthly?year= | Evolução mensal | Autenticado |
+| GET | /api/vendas/category-clients?year=&category= | Clientes por categoria | Autenticado |
 
 ### 8.4. Estratégia
 
 | Método | Endpoint | Descrição | Acesso |
 |--------|----------|-----------|--------|
-| GET | /api/estrategia | Listar estratégias (filtrado) | Autenticado |
+| GET | /api/estrategia | Listar estratégias | Autenticado |
 | POST | /api/estrategia | Criar estratégia | Admin |
 | PUT | /api/estrategia/:id | Editar estratégia | Admin |
 | DELETE | /api/estrategia/:id | Apagar estratégia | Admin |
-| POST | /api/estrategia/:id/contributions | Adicionar contribuição | Autenticado |
-| PUT | /api/estrategia/contributions/:id | Editar contribuição própria | Autenticado |
-| DELETE | /api/estrategia/contributions/:id | Apagar contribuição própria | Autenticado |
 
 ### 8.5. Objectivos
 
 | Método | Endpoint | Descrição | Acesso |
 |--------|----------|-----------|--------|
 | GET | /api/objetivos/:year | Listar objectivos do ano | Autenticado |
-| POST | /api/objetivos | Criar/actualizar objectivo | Admin |
+| POST | /api/objetivos | Criar objectivo (upsert) | Admin |
 | PUT | /api/objetivos/:id | Editar objectivo | Admin |
 | DELETE | /api/objetivos/:id | Remover objectivo | Admin |
 
@@ -513,56 +503,121 @@ CREATE INDEX idx_commission_payments_user ON commission_payments(user_id, year);
 
 | Método | Endpoint | Descrição | Acesso |
 |--------|----------|-----------|--------|
-| GET | /api/comissoes/my | Ver minhas comissões e escalão actual | Autenticado (com permissão) |
-| GET | /api/comissoes/my/simulation | Simulação com facturação actual | Autenticado (com permissão) |
-| GET | /api/comissoes/user/:id | Ver comissões de utilizador | Admin |
-| POST | /api/comissoes/upload/:userId | Upload de imagem do mapa + OCR extraction | Admin |
-| POST | /api/comissoes/confirm/:userId | Confirmar dados extraídos e gravar | Admin |
-| PUT | /api/comissoes/map/:id | Editar mapa (factor correcção, escalão objectivo/tecto) | Admin |
-| DELETE | /api/comissoes/map/:id | Remover mapa | Admin |
-| GET | /api/comissoes/compare/:userId/:year | Facturação real vs Comissão | Admin |
-| POST | /api/comissoes/payments | Registar pagamento de comissão | Admin |
-| GET | /api/comissoes/payments/:userId/:year | Ver pagamentos efectuados | Admin |
+| GET | /api/comissoes/my?year= | Ver minhas comissões | Autenticado (com permissão) |
+| GET | /api/comissoes/user/:id?year= | Ver comissões de utilizador | Admin |
+| POST | /api/comissoes/ocr | Extrair escalões via Claude Vision | Admin |
+| POST | /api/comissoes/confirm/:userId | Confirmar e gravar escalões | Admin |
 
 ### 8.7. Insights
 
 | Método | Endpoint | Descrição | Acesso |
 |--------|----------|-----------|--------|
-| GET | /api/insights | Gerar insights automáticos | Autenticado |
-| GET | /api/insights/predictions | Análise preditiva (fase 2) | Autenticado |
+| GET | /api/insights?year= | Gerar insights automáticos | Autenticado |
 
 ---
 
-## 9. Roadmap de Implementação
+## 9. Deploy e Infraestrutura
 
-### Fase 1 — Fundação (Semana 1-2)
-- [ ] Setup do projecto (repo, Railway, PostgreSQL)
-- [ ] Schema da BD
-- [ ] Autenticação (login, JWT, change password)
-- [ ] Gestão de utilizadores (CRUD admin)
-- [ ] Layout base React (sidebar, header, routing)
-- [ ] Página de login com fluxo de password temporária
+### 9.1. Railway (✅ Configurado)
 
-### Fase 2 — Dados (Semana 2-3)
-- [ ] Upload e parsing de Excel (migrar lógica V18)
-- [ ] Armazenamento em PostgreSQL com histórico
-- [ ] API de consulta de vendas (filtrada por permissões de utilizador)
-- [ ] Atribuição de clientes a utilizadores
+- **Serviço único:** Backend Node.js serve o frontend build (`frontend/dist`)
+- **PostgreSQL managed:** Base de dados separada no mesmo projecto
+- **Variáveis de ambiente:** DATABASE_URL, JWT_SECRET, ANTHROPIC_API_KEY, NODE_ENV, VITE_API_URL
+- **Build:** `postinstall` no root package.json faz install + build
+- **Start:** `cd backend && node server.js`
+- **Domínio:** salesradar-production.up.railway.app
 
-### Fase 3 — Módulos Core (Semana 3-5)
-- [ ] Dashboard
-- [ ] Análise de Clientes (com drill-down)
-- [ ] Análise de Marcas (com gráfico)
-- [ ] Análise de Categorias
-- [ ] Insights automáticos
+### 9.2. Root package.json
 
-### Fase 4 — Módulos Avançados (Semana 5-7)
-- [ ] Estratégia (com contribuições e permissões)
-- [ ] Objectivos de Facturação
-- [ ] Comissões (mapas, escalões, comparação)
-- [ ] Painel de administração completo
+```json
+{
+  "name": "salesradar",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "cd frontend && npm install && npm run build",
+    "start": "cd backend && node server.js",
+    "postinstall": "cd backend && npm install && cd ../frontend && npm install && npm run build"
+  }
+}
+```
 
-### Fase 5 — Preditivo (Fase 2 — Futuro)
+---
+
+## 10. Notas Técnicas
+
+### 10.1. Parsing de Excel
+- Detecção inteligente de colunas: analisa primeiras 100 linhas, encontra coluna numérica mais à direita
+- Corrigido bug de duplicação de registos na importação 2026
+- Hierarquia por indentação: 5 espaços = Mês, 10 = Cliente, 15 = Categoria, 20 = Marca
+
+### 10.2. Meses em Espanhol
+Os dados do CRM vêm com meses em espanhol (enero, febrero, marzo...). O sistema mantém esta nomenclatura internamente e traduz para português na apresentação (Jan, Fev, Mar...).
+
+### 10.3. Agrupamento de Marcas
+Sub-marcas agrupadas no Dashboard via regex:
+- `Ajax*` → Ajax (AjaxCCTV, AjaxFibra, AjaxIncendio, AjaxSuperior, AjaxViviendaVacía)
+- `HIKVISION*` → HIKVISION (HIKVISION PRO, HIKVISION SOLUTIONS, HIKVISION VALUE)
+- `SAFIRE*` → SAFIRE (SAFIRE SMART)
+- `Uniview*` → Uniview (Uniview Easy, Uniview Prime)
+
+Na página de Marcas, as sub-marcas aparecem individualmente para análise detalhada.
+
+### 10.4. OCR de Mapas de Comissões
+1. Admin arrasta imagem para zona de drop
+2. Frontend converte para base64 e envia ao backend
+3. Backend envia à Claude Vision API com prompt estruturado
+4. Extrai: array de escalões {semester, year, bonus}, target_tier, max_tier, vendor_name
+5. Frontend mostra tabela editável para confirmação
+6. Admin confirma → backend grava em commission_maps + commission_tiers
+
+### 10.5. Multi-Concorrentes (Estratégia)
+- 1 concorrente: campos simples (competitor_name = string, competitor_strength = string)
+- 2+ concorrentes: competitor_name = JSON array `[{name, strength}, ...]`
+- Parse function detecta automaticamente o formato
+
+### 10.6. Cálculo de Progresso (Objectivos)
+- `expectedPct = (monthsElapsed / 12) * 100`
+- `actualPct = (actual / target) * 100`
+- Status: on_track (actual ≥ expected), at_risk (≥70% expected), behind (<70%)
+- Projecção: `(actual / monthsElapsed) * 12`
+
+---
+
+## 11. Roadmap
+
+### Fase 1 — Fundação ✅
+- [x] Setup do projecto (repo GitHub, Railway, PostgreSQL)
+- [x] Schema da BD
+- [x] Autenticação (login, JWT, change password)
+- [x] Gestão de utilizadores (CRUD admin)
+- [x] Layout base React (sidebar, header, routing)
+- [x] Landing page com modal login
+
+### Fase 2 — Dados ✅
+- [x] Upload e parsing de Excel (lógica com detecção inteligente de colunas)
+- [x] Armazenamento em PostgreSQL com histórico
+- [x] API de consulta de vendas
+- [x] Atribuição de clientes a utilizadores
+
+### Fase 3 — Módulos Core ✅
+- [x] Dashboard (KPIs, gráficos, top 5)
+- [x] Análise de Clientes (two-column layout com detalhe)
+- [x] Análise de Marcas (two-column layout com detalhe)
+- [x] Análise de Categorias (two-column layout com detalhe)
+- [x] Insights automáticos (7 tipos de alertas)
+
+### Fase 4 — Módulos Avançados ✅
+- [x] Estratégia (com multi-concorrentes e status tracking)
+- [x] Objectivos de Facturação (multi-entry, projecção, estados)
+- [x] Comissões (OCR via Claude Vision, slider desconto, escalões)
+- [x] Painel de administração (utilizadores, uploads, clientes)
+
+### Fase 5 — Deploy ✅
+- [x] GitHub (repositório privado)
+- [x] Railway (PostgreSQL + Node.js service)
+- [x] Domínio público: salesradar-production.up.railway.app
+
+### Fase 6 — Preditivo (Futuro)
 - [ ] Acumulação de histórico suficiente
 - [ ] Detecção de anomalias / churn
 - [ ] Sazonalidade e previsão
@@ -570,72 +625,5 @@ CREATE INDEX idx_commission_payments_user ON commission_payments(user_id, year);
 
 ---
 
-## 10. Notas Técnicas
-
-### 10.1. Parsing de Excel
-A lógica de parsing da V18 baseia-se na contagem de espaços de indentação para identificar o nível hierárquico:
-- 5 espaços = Mês
-- 10 espaços = Cliente
-- 15 espaços = Categoria
-- 20 espaços = Marca (com valor associado)
-
-Esta lógica será migrada para o backend (server/services/parser.js).
-
-### 10.2. Meses em Espanhol
-Os dados do CRM vêm com meses em espanhol (enero, febrero, marzo...). O sistema mantém esta nomenclatura internamente e traduz para português na apresentação.
-
-### 10.3. Agrupamento de Marcas
-Sub-marcas como "HIKVISION TURBO" e "HIKVISION IP" são agrupadas sob "HIKVISION" para análise macro. A V18 já implementa esta lógica.
-
-### 10.4. Categoria "Gastos envio"
-A categoria "Todos / Se puede vender" é convertida para "Gastos envio" e excluída de certas análises (ex: ranking de categorias de produto).
-
-### 10.5. OCR de Mapas de Comissões
-O upload de mapas de comissões é feito por imagem (screenshot/print). O fluxo técnico:
-1. Admin faz upload da imagem (PNG, JPG, WEBP)
-2. Backend envia a imagem à API Claude com prompt estruturado para extrair os valores da tabela
-3. Prompt pede resposta em JSON: array de objectos com {semester_threshold, year_threshold, bonus}
-4. Backend valida o JSON (número de colunas, valores numéricos, progressividade dos escalões)
-5. Frontend apresenta os dados num formulário editável para confirmação
-6. Admin marca o escalão objectivo e o tecto máximo
-7. Admin confirma → backend grava na BD
-8. Imagem original é guardada como referência
-
-**Formato esperado do prompt de extracção:**
-```
-Analisa esta imagem de uma tabela de comissões. Extrai todos os escalões.
-Cada linha tem 3 valores: threshold semestral, threshold anual, e prémio.
-Os valores estão em formato europeu (ponto para milhares, vírgula para decimais).
-Responde APENAS em JSON: [{"semester": number, "year": number, "bonus": number}, ...]
-Converte todos os valores para formato numérico (sem pontos de milhares, ponto como decimal).
-```
-
-**Validações automáticas:**
-- Valores devem ser progressivos (cada escalão > anterior)
-- Mínimo de 3 escalões
-- Valores numéricos válidos
-- Alerta se a extracção parecer incompleta (menos de 10 linhas quando a imagem sugere mais)
-
----
-
-## 11. Evolução da V18
-
-### O que se mantém da V18:
-- Lógica de parsing de Excel
-- Estrutura de análise (clientes, marcas, categorias)
-- Algoritmos de insights
-- Lógica de cálculo de comissões e escalões
-- Componentes visuais (adaptados para React)
-
-### O que muda:
-- De HTML monolítico para React + API
-- De localStorage para PostgreSQL
-- De single-user para multi-user com permissões
-- De upload manual por sessão para histórico persistente
-- De ferramenta standalone para plataforma web com autenticação
-- Adição de módulo de administração
-- Adição futura de camada preditiva
-
----
-
-*Documento de referência — actualizar conforme o projecto evolui.*
+*Documento de referência — actualizado em 24 Fevereiro 2026*
+*Projecto v1.0 — todos os módulos implementados e deployed*
