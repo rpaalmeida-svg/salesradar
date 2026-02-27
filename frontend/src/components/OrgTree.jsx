@@ -3,15 +3,15 @@ import api from '../services/api';
 
 // ============================================
 // COMPONENTE: Árvore Organizacional de Contactos
-// Usar dentro da página Estratégia
 // ============================================
 
 // ─── Construir árvore a partir de lista plana ───
 function buildTree(contacts) {
   const map = {};
   const roots = [];
-
-  contacts.forEach(c => { map[c.id] = { ...c, children: [] }; });
+  contacts.forEach(c => {
+    map[c.id] = { ...c, children: [] };
+  });
   contacts.forEach(c => {
     if (c.parent_id && map[c.parent_id]) {
       map[c.parent_id].children.push(map[c.id]);
@@ -19,19 +19,54 @@ function buildTree(contacts) {
       roots.push(map[c.id]);
     }
   });
-
-  // Ordenar filhos por sort_order
   const sortChildren = (nodes) => {
     nodes.sort((a, b) => a.sort_order - b.sort_order);
     nodes.forEach(n => sortChildren(n.children));
   };
   sortChildren(roots);
-
   return roots;
 }
 
+// ─── Obter descendentes (para evitar referências circulares) ───
+function getDescendantIds(contacts, parentId) {
+  const ids = new Set();
+  const findChildren = (pid) => {
+    contacts.forEach(c => {
+      if (c.parent_id === pid) {
+        ids.add(c.id);
+        findChildren(c.id);
+      }
+    });
+  };
+  findChildren(parentId);
+  return ids;
+}
+
+// ─── Gerar opções para dropdown de pais ───
+function buildParentOptions(contacts, excludeId) {
+  const tree = buildTree(contacts);
+  const options = [];
+  const excludeIds = excludeId ? getDescendantIds(contacts, excludeId) : new Set();
+  if (excludeId) excludeIds.add(excludeId);
+
+  const walk = (nodes, depth) => {
+    nodes.forEach(node => {
+      if (!excludeIds.has(node.id)) {
+        const indent = '\u2003'.repeat(depth);
+        options.push({
+          id: node.id,
+          label: `${indent}${node.role} — ${node.is_placeholder ? '(por identificar)' : node.name}`,
+        });
+        walk(node.children, depth + 1);
+      }
+    });
+  };
+  walk(tree, 0);
+  return options;
+}
+
 // ─── Card de Contacto (modal) ───
-function ContactCard({ contact, onClose, onSave, onDelete }) {
+function ContactCard({ contact, contacts, onClose, onSave, onDelete }) {
   const [form, setForm] = useState({
     name: contact?.name || '',
     role: contact?.role || '',
@@ -43,14 +78,31 @@ function ContactCard({ contact, onClose, onSave, onDelete }) {
     action_status: contact?.action_status || 'none',
     action_due_date: contact?.action_due_date ? contact.action_due_date.split('T')[0] : '',
     is_placeholder: contact?.is_placeholder || false,
+    parent_id: contact?.parent_id || null,
   });
+
+  const [parentChanged, setParentChanged] = useState(false);
+
+  const parentOptions = useMemo(() => {
+    return buildParentOptions(contacts || [], contact?.id);
+  }, [contacts, contact?.id]);
+
+  const handleParentChange = (value) => {
+    const newParentId = value === '' ? null : parseInt(value);
+    setForm({ ...form, parent_id: newParentId });
+    setParentChanged(true);
+  };
 
   const handleSave = () => {
     if (!form.name && !form.is_placeholder) {
       if (!form.role) return alert('Preenche pelo menos o cargo para posições vazias');
       setForm(f => ({ ...f, is_placeholder: true }));
     }
-    onSave({ ...form, action_due_date: form.action_due_date || null });
+    const payload = { ...form, action_due_date: form.action_due_date || null };
+    if (!parentChanged) {
+      delete payload.parent_id;
+    }
+    onSave(payload);
   };
 
   const actionStatusConfig = {
@@ -65,8 +117,12 @@ function ContactCard({ contact, onClose, onSave, onDelete }) {
       <div style={styles.cardModal} onClick={e => e.stopPropagation()}>
         <div style={styles.cardHeader}>
           <div>
-            <h3 style={styles.cardTitle}>{contact?.id ? 'Editar Contacto' : 'Novo Contacto'}</h3>
-            {contact?.is_placeholder && <span style={styles.placeholderBadge}>Posição por identificar</span>}
+            <h3 style={styles.cardTitle}>
+              {contact?.id ? 'Editar Contacto' : 'Novo Contacto'}
+            </h3>
+            {contact?.is_placeholder && (
+              <span style={styles.placeholderBadge}>Posição por identificar</span>
+            )}
           </div>
           <button onClick={onClose} style={styles.closeBtn}>✕</button>
         </div>
@@ -76,9 +132,15 @@ function ContactCard({ contact, onClose, onSave, onDelete }) {
           <input
             type="checkbox"
             checked={form.is_placeholder}
-            onChange={e => setForm({ ...form, is_placeholder: e.target.checked, name: e.target.checked ? '' : form.name })}
+            onChange={e => setForm({
+              ...form,
+              is_placeholder: e.target.checked,
+              name: e.target.checked ? '' : form.name
+            })}
           />
-          <span style={{ fontSize: '13px', color: '#6b7280' }}>Posição conhecida mas pessoa não identificada</span>
+          <span style={{ fontSize: '13px', color: '#6b7280' }}>
+            Posição conhecida mas pessoa não identificada
+          </span>
         </label>
 
         <div style={styles.cardGrid}>
@@ -155,6 +217,28 @@ function ContactCard({ contact, onClose, onSave, onDelete }) {
           </div>
         </div>
 
+        {/* Mover para — só aparece em edição */}
+        {contact?.id && (
+          <div style={{ ...styles.cardField, marginTop: '12px' }}>
+            <label style={styles.cardLabel}>📂 Mover para (superior hierárquico)</label>
+            <select
+              value={form.parent_id || ''}
+              onChange={e => handleParentChange(e.target.value)}
+              style={styles.cardSelect}
+            >
+              <option value="">— Raiz (sem superior) —</option>
+              {parentOptions.map(opt => (
+                <option key={opt.id} value={opt.id}>{opt.label}</option>
+              ))}
+            </select>
+            {parentChanged && (
+              <span style={{ fontSize: '11px', color: '#f59e0b', marginTop: '4px' }}>
+                ⚠️ Este contacto será movido na árvore ao guardar
+              </span>
+            )}
+          </div>
+        )}
+
         {/* Notas */}
         <div style={{ ...styles.cardField, marginTop: '12px' }}>
           <label style={styles.cardLabel}>📝 Notas (contexto permanente)</label>
@@ -213,7 +297,11 @@ function ContactCard({ contact, onClose, onSave, onDelete }) {
         <div style={styles.cardFooter}>
           {contact?.id && (
             <button
-              onClick={() => { if (window.confirm('Eliminar este contacto e todos os sub-contactos?')) onDelete(contact.id); }}
+              onClick={() => {
+                if (window.confirm('Eliminar este contacto e todos os sub-contactos?')) {
+                  onDelete(contact.id);
+                }
+              }}
               style={styles.deleteBtn}
             >
               🗑️ Eliminar
@@ -247,7 +335,6 @@ function TreeNode({ node, level, onEdit, onAddChild, maxLevel }) {
 
   return (
     <div style={{ marginLeft: level === 1 ? 0 : 24 }}>
-      {/* Linha do nó */}
       <div style={{
         ...styles.treeRow,
         opacity: node.is_placeholder ? 0.6 : 1,
@@ -267,10 +354,12 @@ function TreeNode({ node, level, onEdit, onAddChild, maxLevel }) {
           style={styles.treeNodeContent}
         >
           <div style={styles.treeNodeMain}>
-            {/* Dot de acção */}
-            {dotColor && <span style={{ ...styles.actionDot, background: dotColor }} />}
-
-            <span style={styles.treeNodeRole}>{node.role || 'Sem cargo'}</span>
+            {dotColor && (
+              <span style={{ ...styles.actionDot, background: dotColor }} />
+            )}
+            <span style={styles.treeNodeRole}>
+              {node.role || 'Sem cargo'}
+            </span>
             <span style={styles.treeNodeSep}>—</span>
             <span style={{
               ...styles.treeNodeName,
@@ -279,13 +368,11 @@ function TreeNode({ node, level, onEdit, onAddChild, maxLevel }) {
             }}>
               {node.is_placeholder ? '(por identificar)' : (node.name || '—')}
             </span>
-
             {node.zone && (
               <span style={styles.treeNodeZone}>{node.zone}</span>
             )}
           </div>
 
-          {/* Mini info de acção */}
           {node.action_text && node.action_status !== 'none' && (
             <div style={styles.treeNodeAction}>
               🎯 {node.action_text}
@@ -386,10 +473,8 @@ export default function OrgTree({ strategyId, clientName, onClose }) {
   const handleSave = async (formData) => {
     try {
       if (editingContact?.id) {
-        // Editar
         await api.put(`/estrategia/contacts/${editingContact.id}`, formData);
       } else {
-        // Criar novo
         await api.post(`/estrategia/${strategyId}/contacts`, {
           ...formData,
           parent_id: newParentId,
@@ -418,7 +503,16 @@ export default function OrgTree({ strategyId, clientName, onClose }) {
   };
 
   if (loading) {
-    return <div style={{ padding: '40px', textAlign: 'center', color: '#9ca3af', fontSize: '14px' }}>A carregar...</div>;
+    return (
+      <div style={{
+        padding: '40px',
+        textAlign: 'center',
+        color: '#9ca3af',
+        fontSize: '14px'
+      }}>
+        A carregar...
+      </div>
+    );
   }
 
   const coverage = stats && stats.total > 0
@@ -437,7 +531,9 @@ export default function OrgTree({ strategyId, clientName, onClose }) {
           </div>
           <h2 style={styles.title}>{clientName}</h2>
         </div>
-        <button onClick={handleAddRoot} style={styles.addRootBtn}>+ Adicionar Nível 1</button>
+        <button onClick={handleAddRoot} style={styles.addRootBtn}>
+          + Adicionar Nível 1
+        </button>
       </div>
 
       {/* Stats Bar */}
@@ -448,20 +544,29 @@ export default function OrgTree({ strategyId, clientName, onClose }) {
             <span style={styles.statLabel}>Total</span>
           </div>
           <div style={styles.statItem}>
-            <span style={{ ...styles.statValue, color: '#16a34a' }}>{stats.identified}</span>
+            <span style={{ ...styles.statValue, color: '#16a34a' }}>
+              {stats.identified}
+            </span>
             <span style={styles.statLabel}>Identificados</span>
           </div>
           <div style={styles.statItem}>
-            <span style={{ ...styles.statValue, color: '#9ca3af' }}>{stats.placeholders}</span>
+            <span style={{ ...styles.statValue, color: '#9ca3af' }}>
+              {stats.placeholders}
+            </span>
             <span style={styles.statLabel}>Por identificar</span>
           </div>
           <div style={styles.statItem}>
-            <span style={{ ...styles.statValue, color: '#f59e0b' }}>{stats.actions_pending}</span>
+            <span style={{ ...styles.statValue, color: '#f59e0b' }}>
+              {stats.actions_pending}
+            </span>
             <span style={styles.statLabel}>Acções Pend.</span>
           </div>
           <div style={styles.statItem}>
             <div style={styles.coverageBar}>
-              <div style={{ ...styles.coverageFill, width: `${coverage}%` }} />
+              <div style={{
+                ...styles.coverageFill,
+                width: `${coverage}%`
+              }} />
             </div>
             <span style={styles.statLabel}>{coverage}% Cobertura</span>
           </div>
@@ -470,10 +575,22 @@ export default function OrgTree({ strategyId, clientName, onClose }) {
 
       {/* Legenda */}
       <div style={styles.legend}>
-        <span style={styles.legendItem}><span style={{ ...styles.legendDot, background: '#f59e0b' }} /> Acção pendente</span>
-        <span style={styles.legendItem}><span style={{ ...styles.legendDot, background: '#3b82f6' }} /> Em curso</span>
-        <span style={styles.legendItem}><span style={{ ...styles.legendDot, background: '#16a34a' }} /> Concluída</span>
-        <span style={styles.legendItem}><span style={{ ...styles.legendDot, borderStyle: 'dashed', border: '1px dashed #9ca3af' }} /> Por identificar</span>
+        <span style={styles.legendItem}>
+          <span style={{ ...styles.legendDot, background: '#f59e0b' }} /> Acção pendente
+        </span>
+        <span style={styles.legendItem}>
+          <span style={{ ...styles.legendDot, background: '#3b82f6' }} /> Em curso
+        </span>
+        <span style={styles.legendItem}>
+          <span style={{ ...styles.legendDot, background: '#16a34a' }} /> Concluída
+        </span>
+        <span style={styles.legendItem}>
+          <span style={{
+            ...styles.legendDot,
+            borderStyle: 'dashed',
+            border: '1px dashed #9ca3af'
+          }} /> Por identificar
+        </span>
       </div>
 
       {/* Árvore */}
@@ -481,8 +598,12 @@ export default function OrgTree({ strategyId, clientName, onClose }) {
         <div style={styles.empty}>
           <span style={{ fontSize: '48px' }}>🏢</span>
           <p style={styles.emptyTitle}>Estrutura não definida</p>
-          <p style={styles.emptyText}>Começa por adicionar os cargos de nível 1 (Directores)</p>
-          <button onClick={handleAddRoot} style={styles.addRootBtn}>+ Adicionar primeiro contacto</button>
+          <p style={styles.emptyText}>
+            Começa por adicionar os cargos de nível 1 (Directores)
+          </p>
+          <button onClick={handleAddRoot} style={styles.addRootBtn}>
+            + Adicionar primeiro contacto
+          </button>
         </div>
       ) : (
         <div style={styles.treeContainer}>
@@ -503,7 +624,11 @@ export default function OrgTree({ strategyId, clientName, onClose }) {
       {showCard && (
         <ContactCard
           contact={editingContact}
-          onClose={() => { setShowCard(false); setEditingContact(null); }}
+          contacts={contacts}
+          onClose={() => {
+            setShowCard(false);
+            setEditingContact(null);
+          }}
           onSave={handleSave}
           onDelete={handleDelete}
         />
