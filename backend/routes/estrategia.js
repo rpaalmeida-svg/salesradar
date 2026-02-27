@@ -59,8 +59,11 @@ router.put('/contacts/:id', adminMiddleware, async (req, res) => {
     const { 
       name, role, phone, email, zone, 
       notes, action_text, action_status, action_due_date,
-      is_placeholder, parent_id, sort_order 
+      is_placeholder, sort_order 
     } = req.body;
+
+    // parent_id só é actualizado se vier explicitamente no body
+    const updateParent = req.body.hasOwnProperty('parent_id');
 
     const result = await pool.query(
       `UPDATE account_contacts SET
@@ -74,15 +77,15 @@ router.put('/contacts/:id', adminMiddleware, async (req, res) => {
         action_status = COALESCE($8, action_status),
         action_due_date = $9,
         is_placeholder = COALESCE($10, is_placeholder),
-        parent_id = $11,
-        sort_order = COALESCE($12, sort_order),
+        parent_id = CASE WHEN $11::boolean THEN $12::integer ELSE parent_id END,
+        sort_order = COALESCE($13, sort_order),
         updated_at = NOW()
-       WHERE id = $13
+       WHERE id = $14
        RETURNING *`,
       [
         name, role, phone, email, zone,
         notes, action_text, action_status, action_due_date,
-        is_placeholder, parent_id, sort_order, id
+        is_placeholder, updateParent, updateParent ? req.body.parent_id : null, sort_order, id
       ]
     );
 
