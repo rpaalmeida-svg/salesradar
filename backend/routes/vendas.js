@@ -102,15 +102,26 @@ router.get('/by-client', async (req, res) => {
 // GET /api/vendas/by-brand
 router.get('/by-brand', async (req, res) => {
   try {
-    const { year } = req.query;
+    const { year, client } = req.query;
     const yearFilter = year || new Date().getFullYear();
 
-    const result = await pool.query(
-      `SELECT brand, SUM(value) as total, COUNT(DISTINCT client) as clients
-       FROM sales_data WHERE year = $1
-       GROUP BY brand ORDER BY total DESC`,
-      [yearFilter]
-    );
+    let query, params;
+
+    if (client) {
+      query = `
+        SELECT brand, month, SUM(value) as total, COUNT(DISTINCT client) as clients
+        FROM sales_data WHERE year = $1 AND client = $2
+        GROUP BY brand, month ORDER BY total DESC`;
+      params = [yearFilter, client];
+    } else {
+      query = `
+        SELECT brand, SUM(value) as total, COUNT(DISTINCT client) as clients
+        FROM sales_data WHERE year = $1
+        GROUP BY brand ORDER BY total DESC`;
+      params = [yearFilter];
+    }
+
+    const result = await pool.query(query, params);
     res.json(result.rows);
   } catch (err) {
     console.error('By brand error:', err);
