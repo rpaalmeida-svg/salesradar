@@ -1,13 +1,12 @@
 import { useState, useEffect } from 'react';
 import api from '../services/api';
+import OrgTree from '../components/OrgTree';
 
 function parseCompetitors(name, strength) {
-  // Tenta parse JSON (formato novo)
   try {
     const parsed = JSON.parse(name);
     if (Array.isArray(parsed)) return parsed;
   } catch (e) {}
-  // Formato antigo: string simples
   if (name) return [{ name, strength: strength || '' }];
   return [];
 }
@@ -27,6 +26,7 @@ export default function Estrategia() {
   const [showForm, setShowForm] = useState(false);
   const [filterStatus, setFilterStatus] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [viewingOrg, setViewingOrg] = useState(null);
   const [form, setForm] = useState({
     client_name: '',
     objective: '',
@@ -155,6 +155,24 @@ export default function Estrategia() {
     concluido: strategies.filter(s => s.status === 'concluido').length,
   };
 
+  // ═══════════════════════════════════════════
+  // Se está a ver a árvore organizacional, mostra o OrgTree
+  // ═══════════════════════════════════════════
+  if (viewingOrg) {
+    return (
+      <div>
+        <OrgTree
+          strategyId={viewingOrg.id}
+          clientName={viewingOrg.client_name}
+          onClose={() => { setViewingOrg(null); fetchData(); }}
+        />
+      </div>
+    );
+  }
+
+  // ═══════════════════════════════════════════
+  // Vista normal — lista de estratégias
+  // ═══════════════════════════════════════════
   return (
     <div>
       <div style={styles.header}>
@@ -325,6 +343,9 @@ export default function Estrategia() {
           {filtered.map(s => {
             const sc = statusConfig[s.status] || statusConfig.pendente;
             const comps = parseCompetitors(s.competitor_name, s.competitor_strength);
+            const contactCount = parseInt(s.contact_count) || 0;
+            const placeholderCount = parseInt(s.placeholder_count) || 0;
+            const pendingActions = parseInt(s.pending_actions) || 0;
             return (
               <div key={s.id} style={styles.strategyCard}>
                 <div style={styles.strategyHeader}>
@@ -333,6 +354,13 @@ export default function Estrategia() {
                     <h4 style={styles.strategyClient}>{s.client_name}</h4>
                   </div>
                   <div style={styles.strategyActions}>
+                    <button
+                      onClick={() => setViewingOrg({ id: s.id, client_name: s.client_name })}
+                      style={styles.actionBtn}
+                      title="Ver estrutura organizacional"
+                    >
+                      🏢
+                    </button>
                     <button onClick={() => handleEdit(s)} style={styles.actionBtn}>✏️</button>
                     <button onClick={() => handleDelete(s.id)} style={styles.actionBtn}>🗑️</button>
                   </div>
@@ -359,6 +387,17 @@ export default function Estrategia() {
                         )}
                       </span>
                     ))}
+                    {/* Indicadores de contactos */}
+                    {contactCount > 0 && (
+                      <span style={{ ...styles.footerTag, background: '#eff6ff', color: '#3b82f6' }}>
+                        👥 {contactCount - placeholderCount}/{contactCount} identificados
+                      </span>
+                    )}
+                    {pendingActions > 0 && (
+                      <span style={{ ...styles.footerTag, background: '#fffbeb', color: '#f59e0b' }}>
+                        🎯 {pendingActions} acções pendentes
+                      </span>
+                    )}
                   </div>
                   <span style={styles.footerDate}>
                     {new Date(s.created_at).toLocaleDateString('pt-PT')}
