@@ -37,6 +37,14 @@ router.post('/', authMiddleware, adminMiddleware, upload.single('file'), async (
     const ultimoMes = dados[dados.length - 1].mes;
     const year = dados[0].year;
 
+    // Limpar dados existentes do mesmo ano
+    const existingUploads = await pool.query('SELECT id FROM uploads WHERE year = $1', [year]);
+    if (existingUploads.rows.length > 0) {
+      const oldIds = existingUploads.rows.map(r => r.id);
+      await pool.query('DELETE FROM sales_data WHERE upload_id = ANY($1)', [oldIds]);
+      await pool.query('DELETE FROM uploads WHERE year = $1', [year]);
+    }
+
     // Registar upload
     const uploadResult = await pool.query(
       `INSERT INTO uploads (filename, year, period_start, period_end, record_count, uploaded_by)
