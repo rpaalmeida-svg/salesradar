@@ -67,6 +67,8 @@ export default function Clientes() {
   };
 
   const fetchClientDetail = async (clientName) => {
+    setClientDetail(null); 
+    setPrevClientDetail(null);
     try {
       const prev = year - 1;
       const [detailRes, prevDetailRes] = await Promise.all([
@@ -277,17 +279,27 @@ export default function Clientes() {
                       <span style={styles.detailTableRight}>Valor</span>
                       <span style={styles.detailTableRight}>Peso</span>
                     </div>
-                    {clientDetail.slice(0, 10).map(b => {
-                      const clientTotal = clientDetail.reduce((s, x) => s + parseFloat(x.total), 0);
-                      const pct = clientTotal > 0 ? (parseFloat(b.total) / clientTotal * 100) : 0;
-                      return (
-                        <div key={b.brand} style={styles.detailTableRow}>
-                          <span style={{ flex: 1, fontWeight: '500', color: '#111827' }}>{b.brand}</span>
-                          <span style={styles.detailTableRight}>{formatCurrency(parseFloat(b.total))}</span>
-                          <span style={{ ...styles.detailTableRight, color: '#9ca3af' }}>{pct.toFixed(1)}%</span>
-                        </div>
-                      );
-                    })}
+                    {(() => {
+                      const brandMap = {};
+                      clientDetail.forEach(b => {
+                        const brand = b.brand;
+                        brandMap[brand] = (brandMap[brand] || 0) + parseFloat(b.total);
+                      });
+                      const brands = Object.entries(brandMap)
+                        .map(([brand, total]) => ({ brand, total }))
+                        .sort((a, b) => b.total - a.total);
+                      const clientTotal = brands.reduce((s, x) => s + x.total, 0);
+                      return brands.slice(0, 10).map(b => {
+                        const pct = clientTotal > 0 ? (b.total / clientTotal * 100) : 0;
+                        return (
+                          <div key={b.brand} style={styles.detailTableRow}>
+                            <span style={{ flex: 1, fontWeight: '500', color: '#111827' }}>{b.brand}</span>
+                            <span style={styles.detailTableRight}>{formatCurrency(b.total)}</span>
+                            <span style={{ ...styles.detailTableRight, color: '#9ca3af' }}>{pct.toFixed(1)}%</span>
+                          </div>
+                        );
+                      });
+                    })()}
                   </div>
                 </div>
               )}
