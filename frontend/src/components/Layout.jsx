@@ -11,6 +11,16 @@ const menuItems = [
   { path: '/objectivos', label: 'Objectivos', icon: '📈' },
 ];
 
+// Páginas alimentadas pelo Odoo (via extensão Chrome) — só administrador
+const odooSalesItems = [
+  { path: '/odoo/sales', label: 'Grandes Contas (Odoo)', icon: '🧾' },
+  { path: '/odoo/plan', label: 'Objectivo 2027', icon: '🚀' },
+];
+const odooStockItems = [
+  { path: '/odoo/products', label: 'Todos os produtos', icon: '📦' },
+  { path: '/odoo/ajax', label: 'Ajax', icon: '🛰️' },
+];
+
 const adminItems = [
   { path: '/comissoes', label: 'Comissões', icon: '💰' },
   { path: '/admin', label: 'Administração', icon: '⚙️' },
@@ -21,11 +31,16 @@ export default function Layout() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const allItems = user?.role === 'admin'
-    ? [...menuItems, ...adminItems]
-    : user?.can_view_comissoes
-      ? [...menuItems, { path: '/comissoes', label: 'Comissões', icon: '💰' }]
-      : menuItems;
+  const isAdmin = user?.role === 'admin';
+  const sections = [
+    { title: 'Vendas', items: isAdmin ? [...menuItems, ...odooSalesItems] : menuItems },
+    ...(isAdmin ? [{ title: 'Stock', items: odooStockItems }] : []),
+    {
+      title: null,
+      items: isAdmin ? adminItems : user?.can_view_comissoes ? [{ path: '/comissoes', label: 'Comissões', icon: '💰' }] : [],
+    },
+  ];
+  const embedded = location.pathname.startsWith('/odoo/');
 
   return (
     <div style={styles.wrapper}>
@@ -37,18 +52,24 @@ export default function Layout() {
         </div>
 
         <nav style={styles.nav}>
-          {allItems.map(item => (
-            <button
-              key={item.path}
-              onClick={() => navigate(item.path)}
-              style={{
-                ...styles.navItem,
-                ...(location.pathname === item.path ? styles.navItemActive : {})
-              }}
-            >
-              <span style={styles.navIcon}>{item.icon}</span>
-              <span>{item.label}</span>
-            </button>
+          {sections.map((sec, i) => sec.items.length > 0 && (
+            <div key={i}>
+              {sec.title && <div style={styles.sectionTitle}>{sec.title}</div>}
+              {!sec.title && i > 0 && <div style={styles.sectionGap} />}
+              {sec.items.map(item => (
+                <button
+                  key={item.path}
+                  onClick={() => navigate(item.path)}
+                  style={{
+                    ...styles.navItem,
+                    ...(location.pathname === item.path ? styles.navItemActive : {})
+                  }}
+                >
+                  <span style={styles.navIcon}>{item.icon}</span>
+                  <span>{item.label}</span>
+                </button>
+              ))}
+            </div>
           ))}
         </nav>
 
@@ -64,7 +85,7 @@ export default function Layout() {
       </aside>
 
       {/* Main Content */}
-      <main style={styles.main}>
+      <main style={embedded ? styles.mainEmbedded : styles.main}>
         <Outlet />
       </main>
     </div>
@@ -109,6 +130,23 @@ const styles = {
     flexDirection: 'column',
     gap: '2px',
     overflowY: 'auto',
+  },
+  sectionTitle: {
+    fontSize: '10px',
+    fontWeight: '700',
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase',
+    color: '#9ca3af',
+    padding: '14px 12px 6px',
+  },
+  sectionGap: { height: '10px' },
+  mainEmbedded: {
+    flex: 1,
+    marginLeft: '240px',
+    padding: 0,
+    background: '#fafafa',
+    minHeight: '100vh',
+    display: 'flex',
   },
   navItem: {
     display: 'flex',

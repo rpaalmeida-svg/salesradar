@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Objetivo 2027 — Grandes Contas</title>
+<link rel="manifest" href="/odoo/manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#2f6fed">
+<link rel="apple-touch-icon" href="/odoo/icons/icon-180.png">
+<link rel="stylesheet" href="/odoo/app.css">
+<style>
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin-bottom: 18px; }
+  .kpi { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; box-shadow: var(--shadow); }
+  .kpi.target { border-top: 4px solid #7c3aed; }
+  .kpi.plan { border-top: 4px solid var(--accent); }
+  .kpi .label { color: var(--muted); font-size: 12px; }
+  .kpi .value { font-size: 24px; font-weight: 650; letter-spacing: -.02em; margin-top: 2px; font-variant-numeric: tabular-nums; }
+  .kpi .sub { display: block; }
+  .delta { font-weight: 650; font-variant-numeric: tabular-nums; }
+  .delta.up { color: var(--ok); } .delta.down { color: var(--critical); }
+  .card { padding: 14px 16px; margin-bottom: 18px; }
+  .card h2 { font-size: 15px; margin: 0 0 10px; display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .card h2 .sub { font-weight: 400; }
+  .card p.note { color: var(--muted); font-size: 13px; margin: 0 0 10px; line-height: 1.45; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  th, td { padding: 8px 8px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
+  th { font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .03em; white-space: nowrap; }
+  th.num, td.num { text-align: right; white-space: nowrap; }
+  td.name { font-weight: 600; min-width: 180px; }
+  td.name .sub { display: block; font-weight: 400; }
+  .chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+  .chip { border: 1px solid var(--border); border-radius: 8px; padding: 2px 7px; font-size: 11px; background: var(--bg); white-space: nowrap; }
+  .chip.lost { border-color: #fecaca; background: #fef2f2; color: #991b1b; }
+  .chip.fresh { border-color: #bbf7d0; background: #f0fdf4; color: #166534; }
+  .badge { display: inline-block; border-radius: 6px; padding: 1px 7px; font-size: 11px; font-weight: 600; }
+  .badge.recorrente { background: #ecfdf5; color: #047857; }
+  .badge.pontual { background: #fff7ed; color: #c2410c; }
+  .badge.irregular { background: #fefce8; color: #a16207; }
+  .badge.parado { background: #fef2f2; color: #b91c1c; }
+  .spark { display: block; width: 120px; height: 28px; }
+  .growth { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink-2); }
+  .growth input { width: 64px; font: inherit; padding: 4px 6px; border: 1px solid var(--border); border-radius: 6px; text-align: right; }
+  svg text { font: 11px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: var(--muted); }
+  .legend { display: flex; gap: 14px; font-size: 12px; color: var(--muted); margin-top: 6px; flex-wrap: wrap; }
+  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 4px; vertical-align: -1px; }
+  .range { font-size: 12px; color: var(--muted); }
+  .buckets { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+  .bucket { border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; background: var(--bg); }
+  .bucket h3 { margin: 0 0 2px; font-size: 13px; }
+  .bucket .q { color: var(--muted); font-size: 12px; margin-bottom: 8px; line-height: 1.4; }
+  .bucket .v { font-weight: 650; font-variant-numeric: tabular-nums; }
+  .bucket ul { margin: 0; padding-left: 16px; font-size: 13px; line-height: 1.5; }
+  .bucket li span { color: var(--muted); font-size: 12px; }
+  input.est { width: 92px; font: inherit; padding: 4px 6px; border: 1px solid var(--border); border-radius: 6px; text-align: right; font-variant-numeric: tabular-nums; }
+  input.est.set { border-color: var(--accent); background: #eff6ff; }
+  select.lever, input.nt { font: inherit; font-size: 12px; padding: 4px 6px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); }
+  input.nt { width: 100%; min-width: 160px; margin-top: 4px; }
+  .gap { font-weight: 650; }
+  .gap.ok { color: var(--ok); } .gap.bad { color: var(--critical); }
+  .savemsg { font-size: 12px; color: var(--muted); }
+  tfoot td { font-weight: 650; background: var(--bg); }
+  @media (max-width: 900px) { th.hideM, td.hideM { display: none; } .kpi .value { font-size: 20px; } }
+</style>
+</head>
+<body>
+<header>
+  <a href="/odoo/sales.html" class="back" title="Vendas">←</a>
+  <h1>Objetivo <span id="nextYear"></span> — Grandes Contas</h1>
+  <span class="meta" id="meta"></span>
+  <span class="spacer"></span>
+  <label class="growth">Crescimento <input type="number" id="growth" min="0" max="200" step="5" value="30"> %</label>
+</header>
+<main>
+  <div class="kpis" id="kpis"></div>
+
+  <section class="card">
+    <h2>Onde está o dinheiro <span class="sub">as quatro perguntas do plano, com as contas que cada uma envolve</span></h2>
+    <div class="buckets" id="buckets"></div>
+  </section>
+
+  <section class="card">
+    <h2>Plano por conta <span class="savemsg" id="saveMsg"></span></h2>
+    <p class="note">Cada linha mostra o que os dados sabem sobre a conta — o padrão de compra, o que deixou de comprar face a <span class="py"></span>, o que começou a comprar — e pede-te o que só tu sabes: <b>quanto achas realista faturar em <span class="ny"></span></b> e qual é a alavanca. A soma das tuas estimativas é o plano bottom-up e aparece lá em cima contra o objetivo. Sem estimativa, a conta entra pelo valor da previsão (crescimento zero).</p>
+    <table>
+      <thead><tr><th>Cliente</th><th class="hideM">Padrão <span class="ty"></span></th><th class="num">Este ano</th><th class="num hideM">vs ano passado</th><th class="num">Prev. <span class="ty"></span></th><th class="hideM">Sinais</th><th class="num">Realista <span class="ny"></span></th><th>Alavanca</th></tr></thead>
+      <tbody id="clients"></tbody>
+      <tfoot><tr id="foot"></tr></tfoot>
+    </table>
+  </section>
+
+  <section class="card">
+    <h2>Como se chega à previsão <span class="sub" id="method"></span></h2>
+    <p class="note" id="explain"></p>
+    <div id="chart"></div>
+    <div class="legend"><span><i style="background:var(--border)"></i><span id="lgPrev"></span></span><span><i style="background:var(--accent)"></i><span id="lgCur"></span></span><span><i style="background:#c4b5fd"></i>resto do ano estimado</span></div>
+  </section>
+</main>
+<script src="/odoo/_shim.js"></script>
+<script>
+const $ = (s) => document.querySelector(s);
+const eur = (n) => new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n || 0);
+const eurK = (n) => Math.abs(n) >= 1e6 ? (n / 1e6).toFixed(2).replace('.', ',') + ' M€' : Math.abs(n) >= 1e3 ? Math.round(n / 1e3) + ' k€' : eur(n);
+const pct = (v) => v == null ? '—' : (v >= 0 ? '+' : '') + v.toFixed(1).replace('.', ',') + ' %';
+const deltaCell = (v) => v == null ? '<span class="sub">—</span>' : `<span class="delta ${v >= 0 ? 'up' : 'down'}">${pct(v)}</span>`;
+const MESES = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+const LEVERS = { '': '—', manter: 'Manter o que há', crescer: 'Crescer na conta', projeto: 'Há projeto à vista', recuperar: 'Recuperar o perdido', risco: 'Em risco', novo: 'Conta a abrir' };
+let data = null, notes = { clients: {} };
+
+async function load() {
+  const g = Number($('#growth').value) || 30;
+  const [r, n] = await Promise.all([fetch('/api/sales/plan?growth=' + g), fetch('/api/plan/notes')]);
+  data = await r.json(); notes = await n.json(); notes.clients = notes.clients || {};
+  if (data.empty) { $('#kpis').innerHTML = '<div class="kpi"><div class="label">Ainda sem dados de vendas — na extensão clica em "Atualizar vendas".</div></div>'; return; }
+  if (notes.growth && Number($('#growth').value) !== notes.growth && !$('#growth').dataset.touched) { $('#growth').value = notes.growth; return load(); }
+  render();
+}
+
+function estimateOf(c) {
+  const e = notes.clients[c.id]?.estimate;
+  return e != null && e !== '' ? Number(e) : null;
+}
+
+function render() {
+  const Y = data.year, N = Y + 1;
+  $('#nextYear').textContent = N;
+  document.querySelectorAll('.ny').forEach((e) => e.textContent = N);
+  document.querySelectorAll('.ty').forEach((e) => e.textContent = Y);
+  document.querySelectorAll('.py').forEach((e) => e.textContent = Y - 1);
+  $('#meta').textContent = `dados de ${new Date(data.taken_at).toLocaleString('pt-PT', { dateStyle: 'short', timeStyle: 'short' })}`;
+  renderKpis(); renderBuckets(); renderClients(); renderChart();
+}
+
+function renderKpis() {
+  const t = data.totals, Y = data.year, N = Y + 1, g = data.growth_pct;
+  const grow = t.ytd_prev ? ((t.ytd - t.ytd_prev) / t.ytd_prev) * 100 : null;
+  const bottomUp = data.clients.reduce((s, c) => s + (estimateOf(c) ?? c.forecast), 0);
+  const nSet = data.clients.filter((c) => estimateOf(c) != null).length;
+  const gap = t.target - bottomUp;
+  $('#kpis').innerHTML = [
+    [`Faturado ${Y} até hoje`, eurK(t.ytd), `${deltaCell(grow)} vs mesmo período de ${Y - 1}`],
+    [`Previsão fecho ${Y}`, eurK(t.forecast_mid), `<span class="range">entre ${eurK(t.forecast_low)} e ${eurK(t.forecast_high)}</span>`],
+    [`Objetivo ${N} (+${g} %)`, eurK(t.target), `1.º semestre: ${eurK(t.target_h1)} (${Math.round(t.h1_share * 100)} % do ano, como em ${Y - 1})`, 'target'],
+    [`O teu plano ${N}`, eurK(bottomUp), `${nSet} de ${data.clients.length} contas com estimativa · ${bottomUp && t.forecast_mid ? pct((bottomUp / t.forecast_mid - 1) * 100) : '—'} face à previsão`, 'plan'],
+    [gap > 0 ? 'Falta para o objetivo' : 'Acima do objetivo', `<span class="gap ${gap > 0 ? 'bad' : 'ok'}">${eurK(Math.abs(gap))}</span>`, gap > 0 ? 'o que tem de vir de contas novas ou de mais ambição nas atuais' : 'o plano bottom-up cobre o objetivo'],
+    ['Concentração', `${t.clients_80} de ${t.clients}`, 'clientes fazem 80 % do faturado'],
+  ].map(([l, v, s, cls]) => `<div class="kpi ${cls || ''}"><div class="label">${l}</div><div class="value">${v}</div><span class="sub">${s}</span></div>`).join('');
+}
+
+function renderBuckets() {
+  const t = data.totals, cs = data.clients;
+  let cum = 0; const core = [];
+  for (const c of cs) { if (cum < t.ytd * 0.8) { cum += Math.max(0, c.ytd); core.push(c); } }
+  const coreIds = new Set(core.map((c) => c.id));
+  const spikes = cs.filter((c) => c.ytd > 10000 && (c.pattern === 'pontual' || (c.delta_pct != null && c.delta_pct > 80)));
+  const falling = cs.filter((c) => (c.delta_pct != null && c.delta_pct < -5 && c.ytd_prev > 10000) || c.lost.length || (c.months_silent >= 2 && c.prev_full > 10000));
+  const small = cs.filter((c) => !coreIds.has(c.id) && !spikes.includes(c) && !falling.includes(c));
+  const li = (c, extra) => `<li>${c.name.split(' - ')[0].split(',')[0]} <span>${extra}</span></li>`;
+  const sumExtra = core.reduce((s, c) => s + c.extra, 0);
+  $('#buckets').innerHTML = [
+    ['1. Segurar', `${core.length} contas fazem 80 %. Se uma falha, o ano falha. Que renovações, concursos ou obras têm no 1.º semestre? Quem mais lhes vende?`, core.map((c) => li(c, `${eurK(c.ytd)} · pro rata pede +${eurK(c.extra)}`)).join(''), `pro rata pede +${eurK(sumExtra)} a estas`],
+    ['2. Converter picos em recorrência', 'Cresceram muito ou compraram num só mês: foi projeto. Há projeto seguinte, ou voltam ao patamar anterior?', spikes.map((c) => li(c, `${deltaCell(c.delta_pct)} · ${c.pattern}`)).join('') || '<li><span>nenhuma</span></li>', `${eurK(spikes.reduce((s, c) => s + c.ytd, 0))} este ano`],
+    ['3. Recuperar', 'Estão a cair, deixaram de comprar uma marca ou estão em silêncio. Recuperar o que já tiveste é mais barato do que conquistar.', falling.map((c) => li(c, [c.delta_pct != null && c.delta_pct < -5 ? pct(c.delta_pct) : '', c.lost.length ? 'deixou ' + c.lost.map((l) => l.brand).join(', ') : '', c.months_silent >= 2 ? `sem compras há ${c.months_silent} meses` : ''].filter(Boolean).join(' · '))).join('') || '<li><span>nenhuma</span></li>', `${eurK(falling.reduce((s, c) => s + Math.max(0, c.prev_full - c.ytd), 0))} abaixo de ${data.year - 1}`],
+    ['4. Pequenas e novas', 'Contas pequenas na área e as que ainda não existem. A fonte mais lenta — não é onde 30 % se ganha, mas é onde se perde se for a única aposta.', small.map((c) => li(c, eurK(c.ytd))).join('') || '<li><span>nenhuma</span></li>', `${eurK(small.reduce((s, c) => s + c.ytd, 0))} este ano`],
+  ].map(([h, q, items, v]) => `<div class="bucket"><h3>${h}</h3><div class="q">${q}</div><div class="v">${v}</div><ul>${items}</ul></div>`).join('');
+}
+
+function spark(c) {
+  const max = Math.max(...c.months_cur, ...c.months_prev, 1);
+  const W = 120, H = 28, bw = W / 12;
+  let s = `<svg class="spark" viewBox="0 0 ${W} ${H}">`;
+  for (let i = 0; i < 12; i++) {
+    const hp = Math.max(0, c.months_prev[i]) / max * H, hc = Math.max(0, c.months_cur[i]) / max * H;
+    s += `<rect x="${i * bw}" y="${H - hp}" width="${bw * 0.42}" height="${hp}" fill="var(--border)"/>`;
+    s += `<rect x="${i * bw + bw * 0.46}" y="${H - hc}" width="${bw * 0.42}" height="${hc}" fill="var(--accent)"/>`;
+  }
+  return s + '</svg>';
+}
+
+function renderClients() {
+  const N = data.year + 1;
+  $('#clients').innerHTML = data.clients.map((c) => {
+    const n = notes.clients[c.id] || {};
+    const est = estimateOf(c);
+    const signals = [
+      ...c.lost.map((l) => `<span class="chip lost">deixou ${l.brand} (${eurK(l.amount)} em ${data.year - 1})</span>`),
+      ...c.fresh.map((f) => `<span class="chip fresh">novo: ${f.brand} ${eurK(f.amount)}</span>`),
+      c.months_silent >= 2 ? `<span class="chip lost">sem compras há ${c.months_silent} meses</span>` : '',
+      c.pending > 1000 ? `<span class="chip">${eurK(c.pending)} por faturar</span>` : '',
+    ].filter(Boolean).join('');
+    const patt = `<span class="badge ${c.pattern}">${c.pattern}</span><span class="sub" style="display:block;font-size:11px">${c.active_months} de ${c.months_elapsed} meses${c.top_month_share >= 0.35 ? ` · maior mês ${Math.round(c.top_month_share * 100)} %` : ''}</span>${spark(c)}`;
+    return `<tr data-id="${c.id}">
+      <td class="name">${c.name}<span class="sub">${Math.round(c.share * 100)} % do total${c.recurring.length ? ' · recorrente em ' + c.recurring.slice(0, 3).join(', ') : ''}</span></td>
+      <td class="hideM">${patt}</td>
+      <td class="num">${eurK(c.ytd)}</td>
+      <td class="num hideM">${deltaCell(c.delta_pct)}</td>
+      <td class="num">${eurK(c.forecast)}<span class="sub" style="display:block;font-size:11px">+${data.growth_pct} % = ${eurK(c.needed)}</span></td>
+      <td class="hideM"><div class="chips">${signals || '<span class="sub">—</span>'}</div></td>
+      <td class="num"><input class="est ${est != null ? 'set' : ''}" type="number" step="1000" placeholder="${Math.round(c.forecast)}" value="${est ?? ''}" data-id="${c.id}"><span class="sub" style="display:block;font-size:11px">${est != null ? pct((est / c.forecast - 1) * 100) + ' vs prev.' : 'sem estimativa'}</span></td>
+      <td><select class="lever" data-id="${c.id}">${Object.entries(LEVERS).map(([k, v]) => `<option value="${k}" ${n.lever === k ? 'selected' : ''}>${v}</option>`).join('')}</select><input class="nt" placeholder="nota: o que vai fazer a diferença nesta conta" value="${(n.note || '').replace(/"/g, '&quot;')}" data-id="${c.id}"></td>
+    </tr>`;
+  }).join('');
+  const bottomUp = data.clients.reduce((s, c) => s + (estimateOf(c) ?? c.forecast), 0);
+  $('#foot').innerHTML = `<td>Total</td><td class="hideM"></td><td class="num">${eurK(data.totals.ytd)}</td><td class="hideM"></td><td class="num">${eurK(data.totals.forecast_mid)}</td><td class="hideM"></td><td class="num">${eurK(bottomUp)}</td><td>objetivo ${eurK(data.totals.target)} · <span class="gap ${data.totals.target - bottomUp > 0 ? 'bad' : 'ok'}">${data.totals.target - bottomUp > 0 ? 'falta ' : 'sobra '}${eurK(Math.abs(data.totals.target - bottomUp))}</span></td>`;
+  document.querySelectorAll('input.est').forEach((i) => i.addEventListener('change', onEdit));
+  document.querySelectorAll('select.lever').forEach((i) => i.addEventListener('change', onEdit));
+  document.querySelectorAll('input.nt').forEach((i) => i.addEventListener('change', onEdit));
+}
+
+let saveT = null, pendingSave = {};
+function onEdit(e) {
+  const id = e.target.dataset.id;
+  const cur = notes.clients[id] || {};
+  if (e.target.classList.contains('est')) cur.estimate = e.target.value === '' ? null : Number(e.target.value);
+  else if (e.target.classList.contains('lever')) cur.lever = e.target.value;
+  else cur.note = e.target.value;
+  notes.clients[id] = cur; pendingSave[id] = cur;
+  renderKpis();
+  const bottomUp = data.clients.reduce((s, c) => s + (estimateOf(c) ?? c.forecast), 0);
+  $('#foot').querySelectorAll('td')[6].textContent = eurK(bottomUp);
+  const g = data.totals.target - bottomUp;
+  $('#foot').querySelectorAll('td')[7].innerHTML = `objetivo ${eurK(data.totals.target)} · <span class="gap ${g > 0 ? 'bad' : 'ok'}">${g > 0 ? 'falta ' : 'sobra '}${eurK(Math.abs(g))}</span>`;
+  if (e.target.classList.contains('est')) { e.target.classList.toggle('set', e.target.value !== ''); const c = data.clients.find((x) => String(x.id) === id); e.target.nextElementSibling.textContent = e.target.value !== '' ? pct((Number(e.target.value) / c.forecast - 1) * 100) + ' vs prev.' : 'sem estimativa'; }
+  $('#saveMsg').textContent = 'a guardar…';
+  clearTimeout(saveT);
+  saveT = setTimeout(async () => {
+    const body = { clients: pendingSave, growth: Number($('#growth').value) }; pendingSave = {};
+    const r = await fetch('/api/plan/notes', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    $('#saveMsg').textContent = r.ok ? 'guardado' : 'erro ao guardar';
+  }, 700);
+}
+
+function renderChart() {
+  const t = data.totals, Y = data.year;
+  const prev = data.months_prev_year, cur = data.months_this_year;
+  const curMo = new Date(data.today).getMonth();
+  const est = prev.map((v, i) => (i < curMo ? 0 : i === curMo ? Math.max(0, v - cur[i]) : v) * (1 + t.factor) / 2);
+  const max = Math.max(...prev, ...cur.map((v, i) => v + est[i]), 1);
+  const W = 760, H = 230, padL = 48, padB = 22, padT = 16, gw = (W - padL - 8) / 12, plotH = H - padB - padT;
+  const k = (v) => (v >= 1e6 ? (v / 1e6).toFixed(1).replace('.', ',') + 'M' : Math.round(v / 1e3) + 'k');
+  let svg = `<svg viewBox="0 0 ${W} ${H}" width="100%" style="max-height:260px;display:block">`;
+  for (let i = 0; i <= 3; i++) { const y = padT + plotH * (1 - i / 3); svg += `<line x1="${padL}" x2="${W}" y1="${y}" y2="${y}" stroke="var(--border)"/><text x="${padL - 6}" y="${y + 4}" text-anchor="end">${eurK((max * i) / 3)}</text>`; }
+  prev.forEach((vp, i) => {
+    const vc = cur[i], ve = est[i];
+    const bw = gw * 0.36, x0 = padL + i * gw + gw * 0.12;
+    const hp = (vp / max) * plotH, hc = (vc / max) * plotH, he = (ve / max) * plotH;
+    svg += `<rect x="${x0}" y="${H - padB - hp}" width="${bw}" height="${hp}" fill="var(--border)" rx="2"/>`;
+    svg += `<rect x="${x0 + bw + 2}" y="${H - padB - hc}" width="${bw}" height="${hc}" fill="var(--accent)" rx="2"/>`;
+    if (ve > 0) svg += `<rect x="${x0 + bw + 2}" y="${H - padB - hc - he}" width="${bw}" height="${he}" fill="#c4b5fd" rx="2"/>`;
+    if (vp > 0) svg += `<text x="${x0 + bw / 2}" y="${H - padB - hp - 3}" text-anchor="middle" style="font-size:9px">${k(vp)}</text>`;
+    if (vc + ve > 0) svg += `<text x="${x0 + bw * 1.5 + 2}" y="${H - padB - hc - he - 3}" text-anchor="middle" style="font-size:9px;fill:var(--ink);font-weight:600">${k(vc + ve)}</text>`;
+    svg += `<text x="${padL + i * gw + gw / 2}" y="${H - 6}" text-anchor="middle">${MESES[i]}</text>`;
+  });
+  $('#chart').innerHTML = svg + '</svg>';
+  $('#lgPrev').textContent = Y - 1; $('#lgCur').textContent = Y;
+  const monthsLeft = 12 - curMo;
+  $('#method').textContent = `previsão = faturado + ${monthsLeft} meses estimados`;
+  $('#explain').innerHTML = `O que falta de ${Y} é estimado pelos mesmos meses de ${Y - 1} (${eurK(t.rest_prev_year)}): sem crescimento dá o valor baixo, com o crescimento acumulado do ano (×${t.factor.toFixed(2).replace('.', ',')}) dá o alto, e a previsão é o meio. Só há um ano de histórico de sazonalidade — um projeto grande a entrar ou a sair no Q4 desloca isto 10-15 %. Há ${eurK(t.pending)} já em carteira por faturar.`;
+}
+
+$('#growth').addEventListener('change', () => { $('#growth').dataset.touched = '1'; load(); });
+load();
+</script>
+</body>
+</html>

@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Vendas — Grandes Contas</title>
+<link rel="manifest" href="/odoo/manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#2f6fed">
+<link rel="apple-touch-icon" href="/odoo/icons/icon-180.png">
+<link rel="stylesheet" href="/odoo/app.css">
+<style>
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin-bottom: 18px; }
+  .kpi { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; box-shadow: var(--shadow); }
+  .kpi .label { color: var(--muted); font-size: 12px; }
+  .kpi .value { font-size: 24px; font-weight: 650; letter-spacing: -.02em; margin-top: 2px; font-variant-numeric: tabular-nums; }
+  .kpi .sub { display: block; }
+  .delta { font-weight: 650; font-variant-numeric: tabular-nums; }
+  .delta.up { color: var(--ok); } .delta.down { color: var(--critical); }
+  .grid2 { display: grid; grid-template-columns: 1.6fr 1fr; gap: 16px; margin-bottom: 18px; }
+  @media (max-width: 900px) { .grid2 { grid-template-columns: 1fr; } }
+  .card { padding: 14px 16px; }
+  .card h2 { font-size: 15px; margin: 0 0 10px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+  .card h2 .sub { font-weight: 400; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  th, td { padding: 7px 8px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
+  th { font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .03em; white-space: nowrap; cursor: pointer; }
+  th.num, td.num { text-align: right; white-space: nowrap; }
+  tr.client { cursor: pointer; }
+  tr.client:hover td { background: var(--bg); }
+  tr.client.active td { background: var(--info-bg); }
+  td.name { font-weight: 600; }
+  td.name .sub { display: block; font-weight: 400; }
+  .bar { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; margin-top: 4px; }
+  .bar i { display: block; height: 100%; background: var(--accent); }
+  .margin { display: inline-block; min-width: 46px; text-align: right; }
+  .margin.hidden { filter: blur(6px); cursor: pointer; }
+  .toggle { color: var(--ink-2); font-size: 13px; display: flex; align-items: center; gap: 6px; }
+  svg text { font: 11px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: var(--muted); }
+  .legend { display: flex; gap: 14px; font-size: 12px; color: var(--muted); margin-top: 6px; }
+  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 4px; vertical-align: -1px; }
+  #detail { margin-top: 18px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { border: 1px solid var(--border); border-radius: 8px; padding: 3px 8px; font-size: 12px; background: var(--bg); }
+  .chip b { font-variant-numeric: tabular-nums; }
+  @media (max-width: 700px) {
+    .kpi .value { font-size: 20px; }
+    th.hideM, td.hideM { display: none; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <a href="/odoo/index.html" class="back" title="Início">←</a>
+  <h1>Vendas — Grandes Contas</h1>
+  <span class="meta" id="meta"></span>
+  <span class="spacer"></span>
+  <label class="toggle" title="Objetivo anual de faturação — traça a média mensal a verde no gráfico">Objetivo <span id="tgtYear"></span> <input type="number" id="target" step="50000" min="0" placeholder="2000000" style="width:104px;font:inherit;padding:3px 6px;border:1px solid var(--border);border-radius:6px;text-align:right"> €</label>
+  <a href="/odoo/plan.html" class="toggle" style="text-decoration:none;font-weight:600;color:#7c3aed">Objetivo 2027 →</a>
+  <label class="toggle"><input type="checkbox" id="showMargin"> Mostrar margem</label>
+</header>
+<main>
+  <section class="kpis" id="kpis"></section>
+
+  <div class="grid2">
+    <div class="card">
+      <h2>Faturação mensal <span class="sub" id="mTitle"></span></h2>
+      <div id="chart"></div>
+      <div class="legend"><span><i style="background:var(--border)"></i>ano passado</span><span><i style="background:var(--accent)"></i>este ano</span><span id="lgTarget" style="display:none"><i style="background:var(--ok)"></i>média mensal do objetivo</span></div>
+    </div>
+    <div class="card">
+      <h2>Por marca <span class="sub">este ano vs mesmo período</span></h2>
+      <table><thead><tr><th>Marca</th><th class="num">Este ano</th><th class="num">Δ</th><th class="num">Marg.</th></tr></thead><tbody id="brands"></tbody></table>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Clientes <span class="sub" id="cTitle">clica num cliente para ver o detalhe</span></h2>
+    <table>
+      <thead><tr>
+        <th data-k="name">Cliente</th>
+        <th data-k="ytd" class="num">Este ano</th>
+        <th data-k="ytd_prev" class="num hideM" title="Mesmo período do ano passado">Mesmo período</th>
+        <th data-k="delta_pct" class="num">Δ</th>
+        <th data-k="prev_full" class="num hideM">Ano passado</th>
+        <th data-k="month" class="num hideM">Este mês</th>
+        <th data-k="pending" class="num hideM" title="Encomendas confirmadas por faturar">Por faturar</th>
+        <th data-k="last_sale" class="hideM">Última venda</th>
+        <th data-k="margin_pct" class="num">Marg.</th>
+      </tr></thead>
+      <tbody id="clients"></tbody>
+    </table>
+  </div>
+
+  <div class="card" id="detail" style="display:none"></div>
+</main>
+<div class="toast" id="toast"></div>
+<script src="/odoo/_shim.js"></script>
+<script>
+const $ = (s) => document.querySelector(s);
+const eur = (n) => new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n || 0);
+const eurK = (n) => Math.abs(n) >= 1e6 ? (n / 1e6).toFixed(2).replace('.', ',') + ' M€' : Math.abs(n) >= 1e3 ? Math.round(n / 1e3) + ' k€' : eur(n);
+const pct = (n) => (n == null ? '—' : (n >= 0 ? '+' : '') + n.toFixed(1).replace('.', ',') + ' %');
+const pct0 = (n) => (n == null ? '—' : n.toFixed(1).replace('.', ',') + ' %');
+const fmtDate = (d) => (d ? new Date(d).toLocaleDateString('pt-PT', { day: '2-digit', month: '2-digit', year: '2-digit' }) : '—');
+const MONTHS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+const ago = (d) => { if (!d) return '—'; const m = Math.round((Date.now() - new Date(d)) / 60000); return m < 60 ? `há ${m} min` : `há ${Math.round(m / 60)} h`; };
+let data = null, sortKey = 'ytd', sortDir = -1, active = null, targets = {};
+const targetYear = () => Number(targets[new Date().getFullYear()]) || 0;
+async function api(u) { const r = await fetch(u); if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }
+const showM = () => $('#showMargin').checked;
+const marginCell = (v) => `<span class="margin ${showM() ? '' : 'hidden'}" title="${showM() ? 'margem sobre o faturado' : 'clica para mostrar'}">${v == null ? '—' : pct0(v)}</span>`;
+const deltaCell = (v) => `<span class="delta ${v == null ? '' : v >= 0 ? 'up' : 'down'}">${pct(v)}</span>`;
+
+function renderKpis() {
+  const t = data.totals; const Y = new Date().getFullYear();
+  $('#kpis').innerHTML = [
+    ['Faturado este ano', eurK(t.ytd), `${eurK(t.ytd_prev)} no mesmo período de ${Y - 1} · ${deltaCell(t.delta_pct).replace('class="delta', 'class="delta')}`],
+    targetYear() ? [`Objetivo ${Y}`, eurK(targetYear()), (() => { const done = t.ytd / targetYear() * 100; const mo = new Date().getMonth(); const expected = targetYear() * mo / 12; const d = t.ytd - expected; return `${Math.round(done)} % feito · ${d >= 0 ? '<span class="delta up">' + eurK(d) + ' acima</span>' : '<span class="delta down">' + eurK(-d) + ' abaixo</span>'} do ritmo (${mo} meses)`; })()]
+      : ['Ano passado completo', eurK(t.prev_full), `${t.prev_full ? Math.round((t.ytd / t.prev_full) * 100) : 0} % já atingido`],
+    ['Este mês', eurK(t.month), `mês anterior ${eurK(t.prev_month)}${t.month && t.prev_month ? ' · ' + deltaCell(((t.month - t.prev_month) / t.prev_month) * 100) : ''}`],
+    ['Mesmo mês ano passado', eurK(t.month_prev_year), t.month && t.month_prev_year ? deltaCell(((t.month - t.month_prev_year) / t.month_prev_year) * 100) + ' este mês vs esse' : 'comparação quando houver faturação este mês'],
+    ['Por faturar', eurK(t.pending), 'encomendas confirmadas'],
+    ['Margem este ano', showM() ? pct0(t.margin_pct) : '<span class="margin hidden">00,0 %</span>', showM() ? `ano passado ${pct0(t.margin_pct_prev)}` : 'clica para mostrar'],
+  ].map(([l, v, s]) => `<div class="kpi"><div class="label">${l}</div><div class="value">${v}</div><span class="sub">${s}</span></div>`).join('');
+  document.querySelectorAll('.margin.hidden').forEach((m) => m.addEventListener('click', () => { $('#showMargin').checked = true; renderAll(); }));
+}
+
+function renderChart(series, el, title) {
+  const Y = new Date().getFullYear();
+  const cur = series.filter((s) => s.month.startsWith(String(Y)));
+  const prev = series.filter((s) => s.month.startsWith(String(Y - 1)));
+  const tgtM = title ? targetYear() / 12 : 0; // só no gráfico geral
+  const max = Math.max(1, tgtM * 1.05, ...series.map((s) => s.amount));
+  const W = 760, H = 230, padL = 48, padB = 22, padT = 16, gw = (W - padL - 8) / 12;
+  const plotH = H - padB - padT;
+  const k = (v) => (v >= 1e6 ? (v / 1e6).toFixed(1).replace('.', ',') + 'M' : Math.round(v / 1e3) + 'k'); // rótulo curto por cima da barra
+  let svg = `<svg viewBox="0 0 ${W} ${H}" width="100%" style="max-height:260px;display:block">`;
+  for (let i = 0; i <= 3; i++) { const y = padT + plotH * (1 - i / 3); svg += `<line x1="${padL}" x2="${W}" y1="${y}" y2="${y}" stroke="var(--border)" stroke-width="1"/><text x="${padL - 6}" y="${y + 4}" text-anchor="end">${eurK((max * i) / 3)}</text>`; }
+  for (let m = 0; m < 12; m++) {
+    const x0 = padL + m * gw; const bw = gw * 0.38;
+    const vp = prev[m]?.amount || 0, vc = cur[m]?.amount || 0;
+    const hp = vp / max * plotH, hc = vc / max * plotH;
+    const xp = x0 + gw * 0.08, xc = xp + bw + 3;
+    svg += `<rect x="${xp}" y="${H - padB - hp}" width="${bw}" height="${hp}" fill="var(--border)" rx="2"><title>${MONTHS[m]} ${Y - 1}: ${eur(vp)}</title></rect>`;
+    svg += `<rect x="${xc}" y="${H - padB - hc}" width="${bw}" height="${hc}" fill="var(--accent)" rx="2"><title>${MONTHS[m]} ${Y}: ${eur(vc)}</title></rect>`;
+    if (vp > 0) svg += `<text x="${xp + bw / 2}" y="${H - padB - hp - 3}" text-anchor="middle" style="font-size:9px">${k(vp)}</text>`;
+    if (vc > 0) svg += `<text x="${xc + bw / 2}" y="${H - padB - hc - 3}" text-anchor="middle" style="font-size:9px;fill:var(--ink);font-weight:600">${k(vc)}</text>`;
+    svg += `<text x="${x0 + gw / 2}" y="${H - 6}" text-anchor="middle">${MONTHS[m]}</text>`;
+  }
+  if (tgtM > 0) {
+    const yt = H - padB - (tgtM / max) * plotH;
+    svg += `<line x1="${padL}" x2="${W}" y1="${yt}" y2="${yt}" stroke="var(--ok)" stroke-width="2" stroke-dasharray="6 4"/>`;
+    svg += `<text x="${W - 4}" y="${yt - 5}" text-anchor="end" style="fill:var(--ok);font-weight:600">objetivo ${eurK(tgtM)}/mês</text>`;
+  }
+  svg += '</svg>';
+  el.innerHTML = svg;
+  if (title) { $('#lgTarget').style.display = tgtM > 0 ? '' : 'none'; title.textContent = `${Y - 1} vs ${Y}`; }
+}
+
+function renderBrands(brands, el) {
+  const top = brands.slice(0, 12);
+  const rest = brands.slice(12);
+  let rows = top.map((b) => `<tr><td>${b.brand}</td><td class="num">${eurK(b.ytd)}</td><td class="num">${deltaCell(b.delta_pct)}</td><td class="num">${marginCell(b.margin_pct)}</td></tr>`).join('');
+  if (rest.length) {
+    const o = rest.reduce((a, b) => ({ ytd: a.ytd + b.ytd, ytd_prev: a.ytd_prev + b.ytd_prev, cost_ytd: a.cost_ytd + (b.cost_ytd || 0) }), { ytd: 0, ytd_prev: 0, cost_ytd: 0 });
+    const delta = o.ytd_prev ? ((o.ytd - o.ytd_prev) / Math.abs(o.ytd_prev)) * 100 : null;
+    const margin = o.ytd ? ((o.ytd - o.cost_ytd) / o.ytd) * 100 : null;
+    rows += `<tr class="sub"><td>Outras (${rest.length} marcas)</td><td class="num">${eurK(o.ytd)}</td><td class="num">${deltaCell(delta)}</td><td class="num">${marginCell(margin)}</td></tr>`;
+  }
+  el.innerHTML = rows || '<tr><td colspan="4" class="sub">—</td></tr>';
+}
+
+function renderClients() {
+  const rows = data.clients.slice().sort((a, b) => {
+    let va = a[sortKey], vb = b[sortKey];
+    if (va == null) va = -Infinity; if (vb == null) vb = -Infinity;
+    if (typeof va === 'string') return va.localeCompare(vb) * -sortDir;
+    return (va - vb) * sortDir;
+  });
+  const max = Math.max(1, ...rows.map((r) => r.ytd));
+  $('#clients').innerHTML = rows.map((c) => `<tr class="client ${active === c.id ? 'active' : ''}" data-id="${c.id}">
+    <td class="name">${c.name}<span class="sub">${c.city || ''}${c.user ? ' · ' + c.user : ''}</span><div class="bar"><i style="width:${(Math.max(0, c.ytd) / max) * 100}%"></i></div></td>
+    <td class="num">${eur(c.ytd)}</td>
+    <td class="num hideM">${eur(c.ytd_prev)}</td>
+    <td class="num">${deltaCell(c.delta_pct)}</td>
+    <td class="num hideM">${eur(c.prev_full)}</td>
+    <td class="num hideM">${eur(c.month)}</td>
+    <td class="num hideM">${c.pending ? eur(c.pending) : '<span class="sub">—</span>'}</td>
+    <td class="hideM">${fmtDate(c.last_sale)}</td>
+    <td class="num">${marginCell(c.margin_pct)}</td>
+  </tr>`).join('');
+  document.querySelectorAll('tr.client').forEach((tr) => tr.addEventListener('click', () => openClient(Number(tr.dataset.id))));
+  document.querySelectorAll('.margin.hidden').forEach((m) => m.addEventListener('click', (e) => { e.stopPropagation(); $('#showMargin').checked = true; renderAll(); }));
+}
+
+async function openClient(id) {
+  active = active === id ? null : id;
+  renderClients();
+  const box = $('#detail');
+  if (!active) { box.style.display = 'none'; return; }
+  box.style.display = 'block';
+  box.innerHTML = '<span class="sub">a carregar…</span>';
+  const d = await api('/api/sales/client/' + id);
+  const c = data.clients.find((x) => x.id === id) || {};
+  box.innerHTML = `<h2>${c.name || id} <span class="sub">${eur(d.totals.ytd)} este ano · ${deltaCell(d.totals.delta_pct)} · última venda ${fmtDate(c.last_sale)}</span></h2>
+    <div class="grid2">
+      <div><div id="cChart"></div><div class="legend"><span><i style="background:var(--border)"></i>ano passado</span><span><i style="background:var(--accent)"></i>este ano</span></div></div>
+      <div><table><thead><tr><th>Marca</th><th class="num">Este ano</th><th class="num">Δ</th><th class="num">Marg.</th></tr></thead><tbody id="cBrands"></tbody></table></div>
+    </div>
+    <h2 style="margin-top:14px">Produtos mais faturados este ano</h2>
+    <div class="chips">${d.products.slice(0, 30).map((p) => `<span class="chip" title="${p.brand || ''}">${p.product} <b>${eur(p.amount)}</b> <span class="sub">· ${Math.round(p.qty)} un.</span></span>`).join('') || '<span class="sub">—</span>'}</div>`;
+  renderChart(d.monthly, $('#cChart'));
+  renderBrands(d.brands, $('#cBrands'));
+  box.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function renderAll() {
+  renderKpis(); renderChart(data.monthly, $('#chart'), $('#mTitle')); renderBrands(data.brands, $('#brands')); renderClients();
+  if (active) { const id = active; active = null; openClient(id); }
+}
+
+document.querySelectorAll('th[data-k]').forEach((th) => th.addEventListener('click', () => {
+  const k = th.dataset.k;
+  if (sortKey === k) sortDir *= -1; else { sortKey = k; sortDir = k === 'name' ? 1 : -1; }
+  renderClients();
+}));
+$('#showMargin').addEventListener('change', renderAll);
+
+(async () => {
+  try {
+    const Y = new Date().getFullYear();
+    $('#tgtYear').textContent = Y;
+    try { const n = await api('/api/plan/notes'); targets = n.targets || {}; if (targets[Y]) $('#target').value = targets[Y]; } catch {}
+    $('#target').addEventListener('change', async () => {
+      const v = Number($('#target').value) || 0; targets[Y] = v;
+      await fetch('/api/plan/notes', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ targets: { [Y]: v } }) });
+      renderAll();
+    });
+    data = await api('/api/sales/overview');
+    if (data.empty) { $('#meta').textContent = 'Ainda sem dados — na extensão do Chrome clica em "Atualizar vendas"'; return; }
+    $('#meta').textContent = `${data.area || 'Grandes Contas'} · ${data.totals.clients} clientes · atualizado ${ago(data.taken_at)}`;
+    renderAll();
+  } catch (e) { $('#meta').textContent = '⚠ ' + e.message; }
+})();
+</script>
+</body>
+</html>

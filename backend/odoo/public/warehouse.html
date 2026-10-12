@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Armazém</title>
+<link rel="manifest" href="/odoo/manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Stock">
+<meta name="theme-color" content="#2f6fed">
+<link rel="apple-touch-icon" href="/odoo/icons/icon-180.png">
+<link rel="stylesheet" href="/odoo/app.css">
+<style>
+  .home { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 8px; }
+  @media (max-width: 700px) { .home { grid-template-columns: 1fr; } }
+  a.tile { display: block; text-decoration: none; color: inherit; padding: 22px 22px 18px; border-radius: 14px; background: var(--surface); border: 1px solid var(--border); box-shadow: var(--shadow); border-top: 5px solid var(--accent); }
+  a.tile.ajax { border-top-color: var(--ok); }
+  a.tile:active { transform: scale(.99); }
+  .tile h2 { margin: 0 0 4px; font-size: 20px; }
+  .tile p { margin: 0 0 14px; color: var(--muted); }
+  .stats { display: flex; gap: 18px; flex-wrap: wrap; }
+  .stat .v { font-size: 22px; font-weight: 650; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+  .stat .l { color: var(--muted); font-size: 12px; }
+  .stat .v.red { color: var(--critical); }
+  .stat .v.blue { color: var(--info); }
+  .go { margin-top: 14px; color: var(--accent); font-weight: 600; }
+  .search { margin-top: 20px; display: flex; gap: 8px; }
+  .search input { flex: 1; font-size: 16px; }
+  .hint { color: var(--muted); font-size: 12px; margin-top: 8px; }
+</style>
+</head>
+<body>
+<header>
+  <a href="/odoo/index.html" class="back" title="Início">←</a>
+  <h1>Armazém</h1>
+  <span class="meta" id="meta"></span>
+</header>
+<main>
+  <form class="search" id="quick" action="/products.html" method="get">
+    <input type="search" name="q" placeholder="Procurar referência ou nome em todos os produtos…" autocomplete="off">
+    <button class="primary" type="submit">Procurar</button>
+  </form>
+  <div class="home">
+    <a class="tile" href="/odoo/products.html">
+      <h2>Todos os produtos</h2>
+      <p>Referências, stock, entrante, PVI Iberia e margem — o catálogo vendável inteiro.</p>
+      <div class="stats" id="statsAll"><span class="sub">a carregar…</span></div>
+      <div class="go">Abrir catálogo →</div>
+    </a>
+    <a class="tile ajax" href="/odoo/ajax.html">
+      <h2>AJAX</h2>
+      <p>Stock, reservas, chegadas anunciadas pelas Compras e o que consigo montar hoje.</p>
+      <div class="stats" id="statsAjax"><span class="sub">a carregar…</span></div>
+      <div class="go">Abrir Ajax →</div>
+    </a>
+  </div>
+  <div class="hint" id="hint"></div>
+</main>
+<script src="/odoo/_shim.js"></script>
+<script>
+const fmt = (n) => new Intl.NumberFormat('pt-PT').format(n);
+const ago = (d) => { if (!d) return '—'; const m = Math.round((Date.now() - new Date(d)) / 60000); return m < 60 ? `há ${m} min` : `há ${Math.round(m / 60)} h`; };
+async function api(u) { const r = await fetch(u); if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }
+(async () => {
+  try {
+    const m = await api('/api/products/meta');
+    document.getElementById('statsAll').innerHTML = m.total
+      ? `<div class="stat"><div class="v">${fmt(m.total)}</div><div class="l">referências vendáveis</div></div>
+         <div class="stat"><div class="v">${fmt(m.with_stock)}</div><div class="l">com stock</div></div>
+         <div class="stat"><div class="v">${m.brands.length}</div><div class="l">marcas</div></div>
+         <div class="stat"><div class="v" style="font-size:14px;padding-top:6px">${ago(m.taken_at)}</div><div class="l">atualizado</div></div>`
+      : '<span class="sub">Ainda sem catálogo — na extensão do Chrome clica em "Catálogo agora".</span>';
+  } catch (e) { document.getElementById('statsAll').innerHTML = '<span class="sub">⚠ ' + e.message + '</span>'; }
+  try {
+    const d = await api('/api/dashboard');
+    const k = d.kpi;
+    document.getElementById('statsAjax').innerHTML =
+      `<div class="stat"><div class="v red">${k.rutura}</div><div class="l">em rutura</div></div>
+       <div class="stat"><div class="v blue">${k.a_chegar}</div><div class="l">a chegar</div></div>
+       <div class="stat"><div class="v">${k.ok}</div><div class="l">OK</div></div>
+       <div class="stat"><div class="v" style="font-size:14px;padding-top:6px">${ago(d.updated_at)}</div><div class="l">atualizado</div></div>`;
+  } catch (e) { document.getElementById('statsAjax').innerHTML = '<span class="sub">⚠ ' + e.message + '</span>'; }
+  if (/iPhone|iPad/.test(navigator.userAgent) && !window.navigator.standalone) {
+    document.getElementById('hint').textContent = 'No iPhone: Partilhar → "Adicionar ao ecrã principal" para abrir isto como uma app.';
+  }
+})();
+</script>
+</body>
+</html>

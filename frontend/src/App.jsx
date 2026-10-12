@@ -12,6 +12,7 @@ import Insights from './pages/Insights';
 import Estrategia from './pages/Estrategia';
 import Objectivos from './pages/Objectivos';
 import Comissoes from './pages/Comissoes';
+import OdooPage from './pages/OdooPage';
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
@@ -66,6 +67,10 @@ function AppRoutes() {
         <Route path="/estrategia" element={<Estrategia />} />
         <Route path="/objectivos" element={<Objectivos />} />
         <Route path="/comissoes" element={<Comissoes />} />
+        <Route path="/odoo/sales" element={<AdminRoute><OdooPage page="sales" /></AdminRoute>} />
+        <Route path="/odoo/plan" element={<AdminRoute><OdooPage page="plan" /></AdminRoute>} />
+        <Route path="/odoo/products" element={<AdminRoute><OdooPage page="products" /></AdminRoute>} />
+        <Route path="/odoo/ajax" element={<AdminRoute><OdooPage page="ajax" /></AdminRoute>} />
       </Route>
       <Route path="*" element={<Navigate to="/dashboard" />} />
     </Routes>

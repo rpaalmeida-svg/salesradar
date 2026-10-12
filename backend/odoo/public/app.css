@@ -1,0 +1,34 @@
+:root {
+  --bg: #f6f7f9; --surface: #ffffff; --border: #e3e6ea; --ink: #1a1d21; --ink-2: #4d5560; --muted: #7b8591;
+  --accent: #2f6fed; --accent-ink: #ffffff;
+  --ok: #0ca30c; --warn: #fab219; --serious: #ec835a; --critical: #d03b3b; --info: #2f6fed;
+  --ok-bg: #e6f6e6; --warn-bg: #fff4d6; --serious-bg: #fdeae2; --critical-bg: #fbe3e3; --info-bg: #e6eefc;
+  --radius: 10px; --shadow: 0 1px 2px rgba(0,0,0,.05);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #101215; --surface: #181b1f; --border: #2a2f36; --ink: #e8eaed; --ink-2: #b6bcc4; --muted: #8a929c;
+    --accent: #5b8def; --ok: #3fbf3f; --warn: #f5c04a; --serious: #f0956f; --critical: #e0605f; --info: #5b8def;
+    --ok-bg: #16301a; --warn-bg: #3a2f12; --serious-bg: #3c2519; --critical-bg: #3c1c1c; --info-bg: #1a2740;
+    --shadow: none;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; -webkit-text-size-adjust: 100%; }
+header { display: flex; align-items: center; gap: 12px; padding: 12px 20px; background: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 5; flex-wrap: wrap; }
+header h1 { font-size: 18px; margin: 0; font-weight: 650; letter-spacing: -.01em; }
+header .meta { color: var(--muted); font-size: 12.5px; }
+header .spacer { flex: 1; }
+header .back { color: var(--ink-2); text-decoration: none; font-size: 18px; padding: 2px 8px; border-radius: 8px; border: 1px solid var(--border); }
+main { padding: 18px 20px 60px; max-width: 1400px; margin: 0 auto; }
+button { font: inherit; border: 1px solid var(--border); background: var(--surface); color: var(--ink); padding: 7px 12px; border-radius: 8px; cursor: pointer; }
+button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+button.small { padding: 3px 8px; font-size: 12px; border-radius: 6px; }
+input[type=search], select { font: inherit; padding: 9px 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); color: var(--ink); }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); }
+.sub { color: var(--muted); font-size: 12px; }
+.pos { color: var(--ok); font-weight: 650; }
+.neg { color: var(--critical); font-weight: 650; }
+.toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 10px; font-size: 13px; opacity: 0; transition: opacity .2s; pointer-events: none; z-index: 30; }
+.toast.show { opacity: 1; }
+@media (max-width: 700px) { main { padding: 12px 12px 60px; } header { padding: 10px 12px; } }

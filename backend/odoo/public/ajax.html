@@ -1,0 +1,647 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ajax Stock</title>
+<link rel="manifest" href="/odoo/manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#2f6fed">
+<link rel="apple-touch-icon" href="/odoo/icons/icon-180.png">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root {
+    --bg: #f6f7f9; --surface: #ffffff; --border: #e3e6ea; --ink: #1a1d21; --ink-2: #4d5560; --muted: #7b8591;
+    --accent: #2f6fed; --accent-ink: #ffffff;
+    --ok: #0ca30c; --warn: #fab219; --serious: #ec835a; --critical: #d03b3b; --info: #2f6fed;
+    --ok-bg: #e6f6e6; --warn-bg: #fff4d6; --serious-bg: #fdeae2; --critical-bg: #fbe3e3; --info-bg: #e6eefc;
+    --radius: 10px; --shadow: 0 1px 2px rgba(0,0,0,.05);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #101215; --surface: #181b1f; --border: #2a2f36; --ink: #e8eaed; --ink-2: #b6bcc4; --muted: #8a929c;
+      --accent: #5b8def; --ok: #3fbf3f; --warn: #f5c04a; --serious: #f0956f; --critical: #e0605f; --info: #5b8def;
+      --ok-bg: #16301a; --warn-bg: #3a2f12; --serious-bg: #3c2519; --critical-bg: #3c1c1c; --info-bg: #1a2740;
+      --shadow: none;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  header { display: flex; align-items: center; gap: 16px; padding: 14px 24px; background: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 5; flex-wrap: wrap; }
+  header h1 { font-size: 18px; margin: 0; font-weight: 650; letter-spacing: -.01em; }
+  header .back { color: var(--ink-2); text-decoration: none; font-size: 18px; padding: 2px 8px; border-radius: 8px; border: 1px solid var(--border); }
+  @media (max-width: 900px) {
+    header { padding: 10px 14px; gap: 10px; }
+    header .meta { width: 100%; order: 3; }
+    main { padding: 12px 12px 60px; }
+    .kpis { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .kpi .value { font-size: 20px; }
+    .syscards { grid-template-columns: 1fr 1fr; gap: 8px; }
+    .role { grid-template-columns: 1fr; gap: 4px; }
+    .card.tableCard { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .card.tableCard table { min-width: 1100px; }
+    th { position: static; }
+    .panel { grid-template-columns: 1fr; }
+    td .name { max-width: 200px; }
+  }
+  header .meta { color: var(--muted); font-size: 12.5px; }
+  header .spacer { flex: 1; }
+  button { font: inherit; border: 1px solid var(--border); background: var(--surface); color: var(--ink); padding: 7px 12px; border-radius: 8px; cursor: pointer; }
+  button:hover { border-color: var(--muted); }
+  button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  button.primary:disabled { opacity: .5; cursor: default; }
+  button.small { padding: 3px 8px; font-size: 12px; border-radius: 6px; }
+  button.danger { color: var(--critical); }
+  main { padding: 20px 24px 60px; max-width: 1900px; margin: 0 auto; }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 18px; }
+  .kpi { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; box-shadow: var(--shadow); cursor: pointer; }
+  .kpi.active { outline: 2px solid var(--accent); }
+  .kpi .label { color: var(--muted); font-size: 12px; display: flex; align-items: center; gap: 6px; }
+  .kpi .value { font-size: 26px; font-weight: 650; letter-spacing: -.02em; margin-top: 2px; font-variant-numeric: tabular-nums; }
+  .kpi .sub { color: var(--muted); font-size: 12px; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+  .toolbar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+  .toolbar input[type=search], .toolbar select { font: inherit; padding: 7px 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--ink); min-width: 220px; }
+  .toolbar label { color: var(--ink-2); font-size: 13px; display: flex; align-items: center; gap: 6px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); overflow: clip; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  th, td { padding: 7px 8px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
+  th { font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .03em; background: var(--surface); position: sticky; top: 58px; cursor: pointer; user-select: none; white-space: nowrap; }
+  th.num, td.num { text-align: right; }
+  td.ref { font-weight: 600; white-space: nowrap; }
+  td .name { color: var(--muted); font-size: 12px; display: block; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  td.status { white-space: nowrap; }
+  td.neg { color: var(--critical); font-weight: 600; }
+  td.pos { color: var(--ink); }
+  .badge { display: inline-flex; align-items: center; gap: 6px; padding: 3px 9px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+  .badge.ok { background: var(--ok-bg); color: var(--ok); }
+  .badge.a_chegar { background: var(--info-bg); color: var(--info); }
+  .badge.parcial { background: var(--warn-bg); color: #8a5a00; }
+  .badge.pedido { background: var(--serious-bg); color: var(--serious); }
+  .badge.rutura { background: var(--critical-bg); color: var(--critical); }
+  .badge.desconhecido { background: var(--bg); color: var(--muted); border: 1px solid var(--border); }
+  @media (prefers-color-scheme: dark) { .badge.parcial { color: var(--warn); } }
+  .sub { color: var(--muted); font-size: 12px; }
+  tr.hidden { display: none; }
+  .empty { padding: 40px; text-align: center; color: var(--muted); }
+  .arr { font-size: 12.5px; white-space: nowrap; }
+  .arr b { font-weight: 650; }
+  /* painel de registo */
+  .panel { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 22px 0; }
+  @media (max-width: 900px) { .panel { grid-template-columns: 1fr; } }
+  .panel .card { padding: 16px; }
+  .panel h2 { font-size: 15px; margin: 0 0 10px; }
+  textarea { width: 100%; min-height: 150px; font: 12.5px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; padding: 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--ink); resize: vertical; }
+  .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 10px; }
+  .row input[type=date], .row input[type=text], .row select { font: inherit; padding: 6px 9px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--ink); }
+  .drop { border: 2px dashed var(--border); border-radius: var(--radius); padding: 22px; text-align: center; color: var(--muted); cursor: pointer; }
+  .drop.over { border-color: var(--accent); color: var(--accent); }
+  .preview { margin-top: 12px; max-height: 260px; overflow: auto; border: 1px solid var(--border); border-radius: 8px; }
+  .preview table th, .batches th { position: static; }
+  .msg { margin-top: 8px; font-size: 13px; color: var(--ink-2); }
+  .msg.err { color: var(--critical); }
+  details summary { cursor: pointer; color: var(--ink-2); font-weight: 600; margin: 18px 0 10px; }
+  details.section > summary { font-size: 15px; color: var(--ink); margin: 22px 0 12px; }
+  details.section > summary:hover { color: var(--accent); }
+  .batches td { font-size: 13px; }
+  .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 10px; font-size: 13px; opacity: 0; transition: opacity .2s; pointer-events: none; }
+  .toast.show { opacity: 1; }
+  .legend { display: flex; gap: 14px; flex-wrap: wrap; color: var(--muted); font-size: 12px; margin: 10px 2px 0; }
+  /* sistemas */
+  #systemsSec { margin-bottom: 20px; }
+  .sysHead { display: flex; align-items: center; gap: 16px; margin: 4px 0 10px; flex-wrap: wrap; }
+  .sysHead h2 { font-size: 15px; margin: 0; }
+  .sysHead label { color: var(--ink-2); font-size: 13px; display: flex; align-items: center; gap: 6px; }
+  .syscards { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; }
+  .syscard { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; box-shadow: var(--shadow); cursor: pointer; border-left: 4px solid var(--border); }
+  .syscard.ok { border-left-color: var(--ok); } .syscard.a_chegar { border-left-color: var(--info); } .syscard.rutura { border-left-color: var(--critical); }
+  .syscard.active { outline: 2px solid var(--accent); }
+  .syscard .t { font-weight: 650; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .syscard .big { font-size: 24px; font-weight: 650; letter-spacing: -.02em; margin: 4px 0 0; font-variant-numeric: tabular-nums; }
+  .syscard .sub { display: block; }
+  .cascade { margin-top: 12px; padding: 14px 16px; }
+  .cascade h3 { font-size: 14px; margin: 0 0 6px; display: flex; align-items: center; gap: 10px; }
+  .role { display: grid; grid-template-columns: 240px 1fr; gap: 10px; padding: 9px 0; border-top: 1px solid var(--border); align-items: start; }
+  .role .rn { font-weight: 600; font-size: 13px; }
+  .role .rn .req { color: var(--muted); font-weight: 400; font-size: 11px; margin-left: 4px; }
+  .role .rn .tot { display: block; color: var(--muted); font-size: 12px; font-weight: 400; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--border); border-radius: 8px; padding: 3px 8px; font-size: 12px; background: var(--bg); cursor: pointer; }
+  .chip.none { opacity: .55; }
+  .chip .v { font-weight: 650; font-variant-numeric: tabular-nums; }
+  .chip .v.neg { color: var(--critical); } .chip .v.pos { color: var(--ok); }
+  .chip .var { color: var(--muted); }
+  .chip .eta { color: var(--info); }
+  .reclass { position: fixed; z-index: 20; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; box-shadow: 0 6px 24px rgba(0,0,0,.15); font-size: 13px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; max-width: 420px; }
+  .reclass select { font: inherit; padding: 4px 6px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); color: var(--ink); }
+  #unclassified summary { margin: 12px 0 8px; }
+  #unclList { padding: 10px 14px; }
+</style>
+</head>
+<body>
+<header>
+  <a href="/odoo/index.html" class="back" title="Início">←</a>
+  <h1>Ajax Stock</h1>
+  <span class="meta" id="meta">a carregar…</span>
+  <span class="spacer"></span>
+  <button id="btnRefresh" title="Vai buscar o stock ao Odoo agora">↻ Atualizar do Odoo</button>
+</header>
+
+<main>
+  <section class="kpis" id="kpis"></section>
+
+  <section id="systemsSec">
+    <div class="sysHead">
+      <h2>O que consigo montar hoje</h2>
+      <label><input type="checkbox" id="grade3"> Só Grau 3 (linha Superior / Fibra G3)</label>
+      <label title="Esconde dummies, white-label (WL), variantes de mercado (SI/TR), packs 10X e B-stock (WO/BO)"><input type="checkbox" id="hideVariants" checked> Esconder dummies, white-label e B-stock</label>
+      <span class="sub" id="sysMeta"></span>
+    </div>
+    <div class="syscards" id="syscards"></div>
+    <div class="card cascade" id="cascade" style="display:none"></div>
+    <details id="unclassified" style="display:none"><summary>Por classificar (<span id="unclCount">0</span>)</summary><div class="card" id="unclList"></div></details>
+  </section>
+
+  <details class="section" id="listDetails">
+  <summary>Listagem de referências (<span id="listCount">…</span>)</summary>
+  <section class="toolbar">
+    <input type="search" id="q" placeholder="Procurar referência ou nome…">
+    <select id="family">
+      <option value="">Todas as famílias</option>
+    </select>
+    <label><input type="checkbox" id="onlyNeg"> Só com saldo negativo</label>
+    <span class="spacer" style="flex:1"></span>
+    <button id="btnExport" class="small">Exportar Excel</button>
+  </section>
+
+  <section class="card tableCard">
+    <table id="tbl">
+      <thead>
+        <tr>
+          <th data-k="ref">Referência</th>
+          <th data-k="on_hand" class="num" title="'Stock total' na listagem do Odoo — quantidade física em armazém">Armazém</th>
+          <th data-k="reserved" class="num" title="Encomendas de clientes por servir (Odoo)">Por servir</th>
+          <th data-k="balance" class="num" title="'Stock disponible' na listagem do Odoo — o que podes prometer a um cliente novo. Negativo = em falta">Disponível</th>
+          <th data-k="producing" class="num" title="'Fabricando' na listagem do Odoo — a Ajax a produzir para a Visiotech, sem data; e ordens de compra confirmadas ainda não recebidas">Fabricando / Pedido</th>
+          <th data-k="arrivals_pending_qty" class="num" title="Anunciado pelas compras (mails / Excel)">A chegar</th>
+          <th data-k="arrivals_earliest" title="Data mais próxima anunciada pelas compras">Quando</th>
+          <th data-k="after_arrivals" class="num" title="Saldo depois de chegar o que está anunciado">Saldo após chegada</th>
+          <th data-k="status">Estado</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+    <div class="empty" id="empty" style="display:none">Sem resultados.</div>
+  </section>
+  <div class="legend">
+    <span><span class="dot" style="background:var(--ok)"></span> OK — há stock para o que está reservado</span>
+    <span><span class="dot" style="background:var(--info)"></span> A chegar — as compras anunciaram quantidade que cobre a falta</span>
+    <span><span class="dot" style="background:var(--warn)"></span> Parcial — anunciado, mas não chega para cobrir</span>
+    <span><span class="dot" style="background:var(--serious)"></span> Pedido — em fabrico na Ajax, encomendado no Odoo ou anunciado "sem informação", sem data</span>
+    <span><span class="dot" style="background:var(--critical)"></span> Rutura — em falta e sem nada anunciado</span>
+  </div>
+  </details>
+
+  <details class="section" id="arrivalsDetails">
+  <summary>Registar chegadas das Compras (mail / Excel)</summary>
+
+  <section class="panel">
+    <div class="card">
+      <h2>Colar mail das compras</h2>
+      <textarea id="pasteText" placeholder="Cola aqui a tabela do mail (Ref visiotech · Ref ajax · Qty que llega · Stock disponible)…"></textarea>
+      <div class="row">
+        <button id="btnParseText">Pré-visualizar</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Carregar Excel</h2>
+      <div class="drop" id="drop">Arrasta um ficheiro .xlsx / .csv para aqui ou clica para escolher<br><input type="file" id="file" accept=".xlsx,.xls,.csv" style="display:none"></div>
+      <div class="msg" id="fileMsg"></div>
+    </div>
+  </section>
+
+  <section class="card" id="previewCard" style="display:none; padding:16px">
+    <h2 style="font-size:15px;margin:0 0 8px">Pré-visualização — <span id="previewCount"></span></h2>
+    <div class="row">
+      <label>Lote / assunto <input type="text" id="batch" placeholder="ex.: Mas llegadas Ajax W39" style="min-width:260px"></label>
+      <label><span id="etaLabel">Data de chegada</span> <input type="date" id="eta"></label>
+      <label>Estado
+        <select id="status">
+          <option value="a_chegar">A chegar (conta para o saldo)</option>
+          <option value="chegou">Já chegou (só registo)</option>
+        </select>
+      </label>
+      <label title="Apaga as chegadas já registadas com este mesmo nome de lote antes de guardar"><input type="checkbox" id="replaceBatch" checked> Substituir lote com o mesmo nome</label>
+      <label id="consumeLabel" title="As quantidades deste mail abatem à previsão (Excel) mais próxima da mesma referência, para não contar duas vezes"><input type="checkbox" id="consumeForecast" checked> Descontar da previsão (Excel)</label>
+      <button class="primary" id="btnSave">Guardar chegadas</button>
+      <button id="btnCancel">Cancelar</button>
+    </div>
+    <div class="msg" id="previewMsg"></div>
+    <div class="preview"><table id="previewTbl"><thead><tr><th>Ref Visiotech</th><th>Ref Ajax</th><th class="num">Qty</th><th>Quando</th><th class="num">Stock (ficheiro)</th><th>No Odoo?</th></tr></thead><tbody></tbody></table></div>
+  </section>
+
+  </details>
+
+  <details id="batchesDetails">
+    <summary>Chegadas registadas (<span id="batchCount">0</span> linhas pendentes)</summary>
+    <div class="card"><table class="batches" id="batchesTbl"><thead><tr><th>Lote</th><th>Referência</th><th class="num">Qty</th><th>Data</th><th>Estado</th><th>Registado</th><th></th></tr></thead><tbody></tbody></table></div>
+  </details>
+</main>
+<div class="toast" id="toast"></div>
+
+<script src="/odoo/_shim.js"></script>
+<script>
+const $ = (s) => document.querySelector(s);
+const fmt = (n) => (n == null ? '' : new Intl.NumberFormat('pt-PT').format(n));
+const fmtDate = (d) => (d ? new Date(d + (d.length === 10 ? 'T00:00:00' : '')).toLocaleDateString('pt-PT', { day: '2-digit', month: 'short' }) : '');
+const STATUS = {
+  ok: ['OK', 'var(--ok)'], a_chegar: ['A chegar', 'var(--info)'], parcial: ['Parcial', 'var(--warn)'],
+  pedido: ['Pedido', 'var(--serious)'], rutura: ['Rutura', 'var(--critical)'], desconhecido: ['Não está no Odoo', 'var(--muted)'],
+};
+const ORDER = { rutura: 0, parcial: 1, pedido: 2, a_chegar: 3, desconhecido: 4, ok: 5 };
+let state = { rows: [], sortKey: 'status', sortDir: 1, statusFilter: '', preview: null, previewSource: 'mail' };
+
+function toast(msg, ms = 2200) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), ms); }
+
+async function api(url, opts) {
+  const r = await fetch(url, { headers: { 'Content-Type': 'application/json' }, ...opts });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.error || `Erro ${r.status}`);
+  return j;
+}
+
+function familyOf(ref) {
+  // AJ-HOMESIREN-W → HOMESIREN ; FIBRA-MOTIONCAM-W → FIBRA
+  if (ref.startsWith('FIBRA-')) return 'FIBRA';
+  const core = ref.replace(/^AJ-/, '');
+  const m = core.match(/^(HUB|KEYPAD|MOTION|DOOR|CURTAIN|COMBI|GLASS|FIRE|EN54|STREETSIREN|HOMESIREN|SPACECONTROL|BUTTON|DOUBLEBUTTON|REX|RELAY|WALLSWITCH|SOCKET|MULTITRANSMITTER|TRANSMITTER|RANGE|WATERSTOP|LEAKS|LIFEQUALITY|BULLETCAM|TURRETCAM|DOMECAM|NVR|CASE|BRACKET|JUNCTIONBOX|REEDSWITCH|VHFBRIDGE|DUALCURTAIN|SUPERIOR|LINESUPPLY|CAIXA)/);
+  return m ? m[1] : core.split('-')[0];
+}
+
+async function load(refresh = false) {
+  $('#meta').textContent = refresh ? 'a ir ao Odoo…' : 'a carregar…';
+  try {
+    const d = await api('/api/dashboard' + (refresh ? '?refresh=1' : ''));
+    state.rows = d.rows.map((r) => ({ ...r, family: familyOf(r.ref) }));
+    state.kpi = d.kpi;
+    const when = d.updated_at ? new Date(d.updated_at).toLocaleString('pt-PT', { dateStyle: 'short', timeStyle: 'short' }) : '—';
+    const ageMin = d.updated_at ? Math.round((Date.now() - new Date(d.updated_at)) / 60000) : null;
+    const old = ageMin != null && ageMin > 45; // o Mac envia de 10 em 10 min; mais de 45 = algo parou
+    const age = ageMin == null ? '' : ageMin < 60 ? `há ${ageMin} min` : `há ${Math.round(ageMin / 60)} h`;
+    $('#meta').textContent = d.odoo_error
+      ? `⚠ ${d.odoo_error}`
+      : `Stock do Odoo às ${when} (${age})${old ? ' ⚠ desatualizado' : ''} · ${d.rows.length} referências`;
+    $('#meta').style.color = old ? 'var(--serious)' : '';
+    if (!state.hasExt) {
+      $('#btnRefresh').textContent = d.source === 'snapshot' ? '↻ Recarregar' : '↻ Atualizar do Odoo';
+      $('#btnRefresh').title = d.source === 'snapshot' ? 'O stock chega do Chrome do Mac mini de 10 em 10 minutos; isto só recarrega o último snapshot' : 'Vai buscar o stock ao Odoo agora';
+    }
+    renderKpis(); renderFamilies(); renderTable();
+    $('#listCount').textContent = fmt(d.rows.length);
+    loadBatches();
+    loadSystems();
+  } catch (e) {
+    $('#meta').textContent = '⚠ ' + e.message;
+  }
+}
+
+function renderKpis() {
+  const k = state.kpi;
+  const items = [
+    ['', 'Referências ativas', k.total, ''],
+    ['rutura', 'Em rutura', k.rutura, 'sem nada anunciado'],
+    ['pedido', 'Pedido / em fabrico', k.pedido, 'no Odoo, sem data'],
+    ['a_chegar', 'A chegar', k.a_chegar, `${fmt(k.units_announced)} un. anunciadas`],
+    ['ok', 'OK', k.ok, ''],
+    ['neg', 'Unidades em falta', fmt(k.units_missing), 'soma dos saldos negativos'],
+  ];
+  $('#kpis').innerHTML = items.map(([key, label, val, sub]) => `
+    <div class="kpi ${state.statusFilter === key && key ? 'active' : ''}" data-k="${key}">
+      <div class="label">${key && STATUS[key] ? `<span class="dot" style="background:${STATUS[key][1]}"></span>` : ''}${label}</div>
+      <div class="value">${val}</div>
+      <div class="sub">${sub}</div>
+    </div>`).join('');
+  document.querySelectorAll('.kpi').forEach((el) => el.addEventListener('click', () => {
+    const k = el.dataset.k;
+    if (k === 'neg') { $('#onlyNeg').checked = !$('#onlyNeg').checked; }
+    else state.statusFilter = state.statusFilter === k ? '' : k;
+    $('#listDetails').open = true;
+    renderKpis(); renderTable();
+  }));
+}
+
+function renderFamilies() {
+  const fams = [...new Set(state.rows.map((r) => r.family))].sort();
+  const sel = $('#family'); const cur = sel.value;
+  sel.innerHTML = '<option value="">Todas as famílias</option>' + fams.map((f) => `<option value="${f}">${f}</option>`).join('');
+  sel.value = cur;
+}
+
+function visibleRows() {
+  const q = $('#q').value.trim().toLowerCase();
+  const fam = $('#family').value;
+  const onlyNeg = $('#onlyNeg').checked;
+  return state.rows.filter((r) =>
+    (!q || r.ref.toLowerCase().includes(q) || (r.name || '').toLowerCase().includes(q)) &&
+    (!fam || r.family === fam) &&
+    (!onlyNeg || r.balance < 0) &&
+    (!state.statusFilter || r.status === state.statusFilter)
+  ).sort((a, b) => {
+    const k = state.sortKey;
+    let va = a[k], vb = b[k];
+    if (k === 'status') { va = ORDER[va]; vb = ORDER[vb]; }
+    if (va == null) va = k.includes('earliest') ? '9999' : -Infinity;
+    if (vb == null) vb = k.includes('earliest') ? '9999' : -Infinity;
+    if (va < vb) return -1 * state.sortDir;
+    if (va > vb) return 1 * state.sortDir;
+    return a.balance - b.balance; // desempate: mais negativo primeiro
+  });
+}
+
+function renderTable() {
+  const rows = visibleRows();
+  $('#empty').style.display = rows.length ? 'none' : 'block';
+  $('#tbody').innerHTML = rows.map((r) => {
+    const [label, color] = STATUS[r.status];
+    const arr = r.arrivals.map((a) => `<div class="arr" title="${(a.batch || '').replace(/"/g, '&quot;')}"><b>${fmt(a.qty)}</b> · ${a.eta ? fmtDate(a.eta) : '<span style="color:var(--serious)">sem data</span>'}${a.note && a.eta ? ` <span class="sub">(${a.note.trim()})</span>` : ''}${a.source === 'mail' ? ' <span class="sub">✉</span>' : ''}</div>`).join('');
+    const po = r.po_pending_qty ? `<span class="sub" title="${r.po_orders.join('\n')}">${r.po_earliest ? 'prev. ' + fmtDate(r.po_earliest) : ''}${r.po_orders.length ? ' · ' + r.po_orders.length + ' PO' : ''}</span>` : '';
+    return `<tr>
+      <td class="ref">${r.ref}${r.name && r.name !== r.ref ? `<span class="name" title="${r.name.replace(/"/g, '&quot;')}">${r.name}</span>` : ''}</td>
+      <td class="num">${fmt(r.on_hand)}</td>
+      <td class="num">${fmt(r.reserved)}</td>
+      <td class="num ${r.balance < 0 ? 'neg' : 'pos'}">${fmt(r.balance)}</td>
+      <td class="num">${r.producing ? '<b>' + fmt(r.producing) + '</b> <span class="sub">fabr.</span>' : ''}${r.producing && r.po_pending_qty ? '<br>' : ''}${r.po_pending_qty ? fmt(r.po_pending_qty) + ' <span class="sub">PO</span><br>' + po : (r.producing ? '' : '<span class="sub">—</span>')}</td>
+      <td class="num">${r.arrivals_pending_qty ? '<b>' + fmt(r.arrivals_pending_qty) + '</b>' : '<span class="sub">—</span>'}${r.arrivals_nodate_qty ? `<br><span class="sub" title="anunciado sem data">+${fmt(r.arrivals_nodate_qty)} s/ data</span>` : ''}</td>
+      <td>${arr || '<span class="sub">—</span>'}</td>
+      <td class="num ${r.after_arrivals < 0 ? 'neg' : 'pos'}">${r.arrivals_pending_qty ? fmt(r.after_arrivals) : '<span class="sub">—</span>'}</td>
+      <td class="status"><span class="badge ${r.status}" title="${r.status === 'a_chegar' && r.covered_on ? 'saldo coberto a partir de ' + fmtDate(r.covered_on) : label}"><span class="dot" style="background:${color}"></span>${label}${r.status === 'a_chegar' && r.covered_on ? ' · ' + fmtDate(r.covered_on) : ''}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+// ---- ordenação ----
+document.querySelectorAll('th[data-k]').forEach((th) => th.addEventListener('click', () => {
+  const k = th.dataset.k;
+  if (state.sortKey === k) state.sortDir *= -1; else { state.sortKey = k; state.sortDir = k === 'status' || k.includes('earliest') || k === 'ref' ? 1 : -1; }
+  renderTable();
+}));
+['#q', '#family', '#onlyNeg'].forEach((s) => $(s).addEventListener('input', renderTable));
+// Se este browser tiver a extensão "Ajax Stock Push", o botão pede-lhe para ir ao Odoo agora.
+const EXT_IDS = ['didikfmklfejfompbimigkpifcolimdk'];
+function askExtension(msg) {
+  return new Promise((resolve) => {
+    if (!window.chrome || !chrome.runtime || !chrome.runtime.sendMessage) return resolve(null);
+    let done = false;
+    for (const id of EXT_IDS) {
+      try { chrome.runtime.sendMessage(id, msg, (r) => { if (chrome.runtime.lastError) return; if (!done) { done = true; resolve(r || null); } }); } catch (e) { /* sem extensão */ }
+    }
+    setTimeout(() => { if (!done) resolve(null); }, msg.type === 'ping' ? 800 : 90000);
+  });
+}
+askExtension({ type: 'ping' }).then((r) => { if (r && r.ok) { $('#btnRefresh').textContent = '↻ Atualizar do Odoo'; $('#btnRefresh').title = 'Pede à extensão deste Chrome para ler o Odoo agora'; state.hasExt = true; } });
+$('#btnRefresh').addEventListener('click', async () => {
+  const b = $('#btnRefresh'); b.disabled = true;
+  if (state.hasExt) {
+    b.textContent = '↻ A ler o Odoo…';
+    const st = await askExtension({ type: 'push-now' });
+    if (st && st.state === 'ok') toast(st.message || 'Stock atualizado do Odoo', 3500);
+    else if (st && st.state === 'odoo_logout') toast('Sem sessão no Odoo neste Chrome — abre o Odoo, entra (código Sophos) e tenta outra vez', 5000);
+    else if (st) toast('Extensão: ' + (st.message || st.state), 5000);
+    b.textContent = '↻ Atualizar do Odoo';
+  }
+  await load(true);
+  if (!state.hasExt) toast('Stock recarregado');
+  b.disabled = false;
+});
+
+// ---- pré-visualização e gravação ----
+function showPreview(rows, batch, source, mode = 'simple') {
+  state.preview = rows; state.previewSource = source; state.previewMode = mode;
+  $('#previewCard').style.display = rows.length ? 'block' : 'none';
+  if (!rows.length) { toast('Não encontrei nenhuma linha com referência AJ-/FIBRA- e quantidade'); return; }
+  const refs = new Set(rows.map((r) => r.ref)).size;
+  $('#previewCount').textContent = mode === 'forecast' ? `${rows.length} chegadas previstas em ${refs} referências` : `${refs} referências`;
+  $('#batch').value = batch || $('#batch').value || '';
+  if (!$('#eta').value) $('#eta').value = new Date().toISOString().slice(0, 10);
+  $('#etaLabel').textContent = mode === 'forecast' ? 'Data (só para linhas sem período)' : 'Data de chegada';
+  $('#consumeLabel').style.display = mode === 'forecast' ? 'none' : '';
+  const known = new Map(state.rows.map((r) => [r.ref, r]));
+  const unknown = new Set(rows.filter((r) => !known.has(r.ref)).map((r) => r.ref)).size;
+  const nodate = rows.filter((r) => r.eta === null && r.note).length;
+  const msgs = [];
+  if (mode === 'forecast') msgs.push('Ficheiro de previsão por período: cada coluna de data virou uma chegada (Princ. = dia 5, Med. = dia 15, Finales = dia 28).');
+  if (nodate) msgs.push(`${nodate} linha(s) "Sin información" ficam sem data — contam como "Pedido", não como "A chegar".`);
+  if (unknown) msgs.push(`${unknown} referência(s) não encontrada(s) no Odoo — ficam registadas na mesma, sinalizadas.`);
+  $('#previewMsg').textContent = msgs.join(' ');
+  $('#previewTbl tbody').innerHTML = rows.map((r) => `<tr>
+    <td>${r.ref}</td><td class="sub">${r.ref_ajax || ''}</td><td class="num"><b>${fmt(r.qty)}</b></td>
+    <td>${r.note ? `${r.eta ? fmtDate(r.eta) : '<span style="color:var(--serious)">sem data</span>'} <span class="sub">— ${r.note}</span>` : '<span class="sub">data do formulário</span>'}</td>
+    <td class="num ${r.stock < 0 ? 'neg' : ''}">${r.stock == null ? '' : fmt(r.stock)}</td>
+    <td>${known.has(r.ref) ? `<span class="sub">saldo ${fmt(known.get(r.ref).balance)}</span>` : '<span style="color:var(--critical)">não encontrado</span>'}</td></tr>`).join('');
+  $('#arrivalsDetails').open = true;
+  $('#previewCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+$('#btnParseText').addEventListener('click', async () => {
+  const text = $('#pasteText').value;
+  if (!text.trim()) return toast('Cola primeiro o texto do mail');
+  const d = await api('/api/parse', { method: 'POST', body: JSON.stringify({ text }) });
+  showPreview(d.rows, d.batch, 'mail', d.mode);
+});
+
+async function handleFile(file) {
+  if (!file) return;
+  $('#fileMsg').textContent = `A ler ${file.name}…`;
+  try {
+    const buf = await file.arrayBuffer();
+    const wb = XLSX.read(buf, { type: 'array' });
+    let rows = [];
+    for (const name of wb.SheetNames) {
+      const ws = wb.Sheets[name];
+      rows = rows.concat(XLSX.utils.sheet_to_json(ws, { header: 1, raw: true, defval: '' }));
+    }
+    const d = await api('/api/parse', { method: 'POST', body: JSON.stringify({ rows }) });
+    $('#fileMsg').textContent = `${file.name}: ${d.rows.length} linha(s) encontrada(s)${d.mode === 'forecast' ? ' (formato de previsão por período)' : ''}`;
+    showPreview(d.rows, file.name.replace(/\.[^.]+$/, ''), 'excel', d.mode);
+  } catch (e) {
+    $('#fileMsg').textContent = 'Erro a ler o ficheiro: ' + e.message; $('#fileMsg').classList.add('err');
+  }
+}
+const drop = $('#drop');
+drop.addEventListener('click', () => $('#file').click());
+$('#file').addEventListener('change', (e) => handleFile(e.target.files[0]));
+drop.addEventListener('dragover', (e) => { e.preventDefault(); drop.classList.add('over'); });
+drop.addEventListener('dragleave', () => drop.classList.remove('over'));
+drop.addEventListener('drop', (e) => { e.preventDefault(); drop.classList.remove('over'); handleFile(e.dataTransfer.files[0]); });
+
+$('#btnCancel').addEventListener('click', () => { state.preview = null; $('#previewCard').style.display = 'none'; });
+$('#btnSave').addEventListener('click', async () => {
+  if (!state.preview || !state.preview.length) return;
+  $('#btnSave').disabled = true;
+  try {
+    const d = await api('/api/arrivals/bulk', { method: 'POST', body: JSON.stringify({
+      items: state.preview, eta: $('#eta').value || null, batch: $('#batch').value || null, status: $('#status').value, source: state.previewSource,
+      replace_batch: $('#replaceBatch').checked,
+      consume_forecast: state.previewMode !== 'forecast' && $('#consumeForecast').checked,
+    }) });
+    toast(`${d.saved} chegadas guardadas${d.replaced ? ` · ${d.replaced} do lote anterior substituídas` : ''}${d.consumed ? ` · ${fmt(d.consumed)} un. descontadas da previsão` : ''}`, 3500);
+    state.preview = null; $('#previewCard').style.display = 'none'; $('#pasteText').value = ''; $('#batch').value = '';
+    await load();
+  } catch (e) { toast('Erro: ' + e.message); }
+  $('#btnSave').disabled = false;
+});
+
+// ---- lista de chegadas registadas ----
+async function loadBatches() {
+  const all = await api('/api/arrivals?all=1');
+  const pending = all.filter((a) => a.status === 'a_chegar');
+  $('#batchCount').textContent = pending.length;
+  const tb = $('#batchesTbl tbody');
+  tb.innerHTML = all.slice(0, 400).map((a) => `<tr>
+    <td>${a.batch || '<span class="sub">—</span>'}<br><span class="sub">${a.source || ''}</span></td>
+    <td><b>${a.ref}</b>${a.ref_ajax ? ` <span class="sub">${a.ref_ajax}</span>` : ''}</td>
+    <td class="num">${fmt(a.qty)}</td>
+    <td>${a.eta ? fmtDate(a.eta) : '<span class="sub">—</span>'}</td>
+    <td>${a.status === 'chegou' ? '<span class="badge ok"><span class="dot" style="background:var(--ok)"></span>Chegou</span>' : '<span class="badge a_chegar"><span class="dot" style="background:var(--info)"></span>A chegar</span>'}</td>
+    <td class="sub">${new Date(a.created_at).toLocaleDateString('pt-PT')}</td>
+    <td style="white-space:nowrap">
+      ${a.status === 'a_chegar' ? `<button class="small" data-act="chegou" data-id="${a.id}">Chegou</button>` : `<button class="small" data-act="a_chegar" data-id="${a.id}">Reabrir</button>`}
+      <button class="small danger" data-act="del" data-id="${a.id}">✕</button>
+      ${a.batch ? `<button class="small danger" data-act="delbatch" data-batch="${encodeURIComponent(a.batch)}" title="Apagar todo o lote">✕ lote</button>` : ''}
+    </td></tr>`).join('');
+  tb.querySelectorAll('button').forEach((b) => b.addEventListener('click', async () => {
+    const { act, id, batch } = b.dataset;
+    try {
+      if (act === 'del') await api(`/api/arrivals/${id}`, { method: 'DELETE' });
+      else if (act === 'delbatch') { if (!window.confirm('Apagar todas as linhas deste lote?')) return; await api(`/api/arrivals/batch/${batch}`, { method: 'DELETE' }); }
+      else await api(`/api/arrivals/${id}`, { method: 'PATCH', body: JSON.stringify({ status: act }) });
+      await load();
+    } catch (e) { toast('Erro: ' + e.message); }
+  }));
+}
+
+// ---- sistemas ----
+const SYS_VERDICT = { ok: ['Vendo sistemas completos', 'var(--ok)'], a_chegar: ['Completo a partir de', 'var(--info)'], rutura: ['Não dá para montar', 'var(--critical)'] };
+state.sys = null; state.sysOpen = null;
+
+async function loadSystems() {
+  const d = await api('/api/systems' + ($('#grade3').checked ? '?grade3=1' : ''));
+  state.sys = d;
+  $('#sysMeta').textContent = d.unclassified.length ? `${d.unclassified.length} referência(s) por classificar` : '';
+  $('#syscards').innerHTML = d.systems.map((s) => {
+    const [label, color] = SYS_VERDICT[s.verdict];
+    let main, sub;
+    if (s.verdict === 'ok') { main = `${fmt(s.systems_possible)} sistemas`; sub = `limitado por: ${s.bottleneck}`; }
+    else if (s.verdict === 'a_chegar') { main = fmtDate(s.ready_on); sub = `falta: ${s.missing.map((m) => m.name).join(', ')}`; }
+    else { main = '0 sistemas'; sub = `falta: ${s.missing.map((m) => m.name + (m.earliest_cover ? ' (' + fmtDate(m.earliest_cover) + ')' : '')).join(', ')}`; }
+    return `<div class="syscard ${s.verdict} ${state.sysOpen === s.key ? 'active' : ''}" data-k="${s.key}">
+      <div class="t"><span>${s.name}</span><span class="dot" style="background:${color}"></span></div>
+      <div class="sub" style="color:${color};font-weight:600">${label}</div>
+      <div class="big">${main}</div>
+      <span class="sub">${sub}</span>
+    </div>`;
+  }).join('');
+  document.querySelectorAll('.syscard').forEach((el) => el.addEventListener('click', () => {
+    state.sysOpen = state.sysOpen === el.dataset.k ? null : el.dataset.k;
+    loadSystems();
+  }));
+  renderCascade();
+  renderUnclassified();
+}
+
+function chipHtml(v) {
+  return `<span class="chip" data-ref="${v.ref}" title="${(v.name || '').replace(/"/g, '&quot;')}\nclica para reclassificar">${v.ref.replace(/^(AJ|FIBRA)-/, '')} <span class="v pos">${fmt(v.balance)}</span></span>`;
+}
+function chipMissing(v) {
+  const eta = v.covered_on || v.arrivals_earliest;
+  return `<span class="chip none" data-ref="${v.ref}" title="${(v.name || '').replace(/"/g, '&quot;')}\nclica para reclassificar">${v.ref.replace(/^(AJ|FIBRA)-/, '')} <span class="v ${v.balance < 0 ? 'neg' : ''}">${fmt(v.balance)}</span>${eta ? `<span class="eta">→${fmtDate(eta)}</span>` : (v.po_pending_qty ? '<span class="sub">pedido</span>' : '')}</span>`;
+}
+const HIDE_VARIANTS_RE = /(-DUMMY|DUMMYFRONT|-WO\d|-BO\d|^(AJ|FIBRA)-(WL|SI|TR)-|^\d+X)/i;
+
+function renderCascade() {
+  const box = $('#cascade');
+  const s = state.sys && state.sys.systems.find((x) => x.key === state.sysOpen);
+  if (!s) { box.style.display = 'none'; return; }
+  box.style.display = 'block';
+  const hideVar = $('#hideVariants').checked;
+  box.innerHTML = `<h3>${s.name} <span class="sub">${s.hint} · só o que há em stock; o resto está em "+N em falta"</span></h3>` +
+    s.roles.map((r) => {
+      let all = r.items.flatMap((g) => g.variants.map((v) => ({ ...v, name: g.name })));
+      if (hideVar) all = all.filter((v) => !HIDE_VARIANTS_RE.test(v.ref));
+      const have = all.filter((v) => v.balance > 0).sort((a, b) => b.balance - a.balance);
+      const miss = all.filter((v) => v.balance <= 0).sort((a, b) => a.balance - b.balance);
+      const total = have.reduce((t, v) => t + v.balance, 0);
+      return `<div class="role">
+        <div class="rn">${r.name}${r.required ? '<span class="req">obrigatório</span>' : ''}<span class="tot">${have.length ? fmt(total) + ' un. em ' + have.length + ' ref.' : (r.earliest_cover ? 'em falta · cobre ' + fmtDate(r.earliest_cover) : 'em falta')}</span></div>
+        <div class="chips">${have.map(chipHtml).join('') || '<span class="sub">— nada em stock</span>'}${miss.length ? `<span class="chip none more" data-role="${r.key}" data-label="+${miss.length} em falta">+${miss.length} em falta</span><span class="idle" data-role="${r.key}" style="display:none">${miss.map(chipMissing).join('')}</span>` : ''}</div>
+      </div>`;
+    }).join('');
+  box.querySelectorAll('.chip.more').forEach((m) => m.addEventListener('click', () => {
+    const i = box.querySelector(`.idle[data-role="${m.dataset.role}"]`);
+    const open = i.style.display !== 'none';
+    i.style.display = open ? 'none' : 'contents';
+    m.textContent = open ? m.dataset.label : '− ocultar em falta';
+  }));
+  box.querySelectorAll('.chip:not(.more)').forEach((c) => c.addEventListener('click', (e) => openReclass(e, c.dataset.ref)));
+}
+
+function renderUnclassified() {
+  const u = state.sys ? state.sys.unclassified : [];
+  $('#unclassified').style.display = u.length ? 'block' : 'none';
+  $('#unclCount').textContent = u.length;
+  $('#unclList').innerHTML = `<div class="chips">${u.map((r) => `<span class="chip" data-ref="${r.ref}" title="${(r.name || '').replace(/"/g, '&quot;')}">${r.ref} <span class="v ${r.balance > 0 ? 'pos' : r.balance < 0 ? 'neg' : ''}">${fmt(r.balance)}</span></span>`).join('')}</div>`;
+  $('#unclList').querySelectorAll('.chip').forEach((c) => c.addEventListener('click', (e) => openReclass(e, c.dataset.ref)));
+}
+
+function openReclass(e, ref) {
+  document.querySelectorAll('.reclass').forEach((x) => x.remove());
+  const defs = state.sys.definitions;
+  const box = document.createElement('div');
+  box.className = 'reclass';
+  box.innerHTML = `<b>${ref}</b>
+    <select id="rcSys"><option value="">(automático)</option>${defs.map((d) => `<option value="${d.key}">${d.name}</option>`).join('')}</select>
+    <select id="rcRole"></select>
+    <button class="small primary" id="rcSave">Guardar</button><button class="small" id="rcCancel">✕</button>`;
+  document.body.appendChild(box);
+  const x = Math.min(e.clientX, window.innerWidth - 440), y = Math.min(e.clientY + 12, window.innerHeight - 80);
+  box.style.left = x + 'px'; box.style.top = y + 'px';
+  const fillRoles = () => {
+    const d = defs.find((z) => z.key === box.querySelector('#rcSys').value);
+    box.querySelector('#rcRole').innerHTML = d ? d.roles.map((r) => `<option value="${r.key}">${r.name}</option>`).join('') : '';
+  };
+  box.querySelector('#rcSys').addEventListener('change', fillRoles);
+  box.querySelector('#rcCancel').addEventListener('click', () => box.remove());
+  box.querySelector('#rcSave').addEventListener('click', async () => {
+    const system = box.querySelector('#rcSys').value, role = box.querySelector('#rcRole').value;
+    try {
+      await api('/api/classification', { method: 'PUT', body: JSON.stringify({ ref, system: system || null, role: role || null }) });
+      box.remove(); toast(system ? `${ref} → ${system}/${role}` : `${ref}: classificação automática`); loadSystems();
+    } catch (err) { toast('Erro: ' + err.message); }
+  });
+}
+$('#grade3').addEventListener('change', loadSystems);
+$('#hideVariants').addEventListener('change', renderCascade);
+
+// ---- exportar ----
+$('#btnExport').addEventListener('click', () => {
+  const rows = visibleRows().map((r) => ({
+    Referência: r.ref, Nome: r.name, Armazém: r.on_hand, Reservado: r.reserved, Saldo: r.balance,
+    'Pedido Odoo': r.po_pending_qty, 'Prev. Odoo': r.po_earliest || '', 'A chegar': r.arrivals_pending_qty, Quando: r.arrivals_earliest || '',
+    'Sem data': r.arrivals_nodate_qty || '', 'Saldo após chegada': r.arrivals_pending_qty ? r.after_arrivals : '', 'Coberto em': r.covered_on || '', Estado: STATUS[r.status][0],
+  }));
+  const ws = XLSX.utils.json_to_sheet(rows);
+  const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Ajax');
+  XLSX.writeFile(wb, `ajax-stock-${new Date().toISOString().slice(0, 10)}.xlsx`);
+});
+
+// secções recolhíveis: lembrar o que ficou aberto
+for (const id of ['listDetails', 'arrivalsDetails', 'batchesDetails']) {
+  const el = $('#' + id);
+  try { if (localStorage.getItem('open:' + id) === '1') el.open = true; } catch {}
+  el.addEventListener('toggle', () => { try { localStorage.setItem('open:' + id, el.open ? '1' : '0'); } catch {} });
+}
+load();
+</script>
+</body>
+</html>

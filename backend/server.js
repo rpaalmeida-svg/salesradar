@@ -24,6 +24,13 @@ app.use('/api/objetivos', require('./routes/objetivos'));
 app.use('/api/comissoes', require('./routes/comissoes'));
 app.use('/api/insights', require('./routes/insights'));
 
+// Módulo Odoo (stock + vendas Grandes Contas): API em /api/odoo e páginas HTML em /odoo
+const odoo = require('./routes/odoo');
+app.use('/api/odoo', odoo.router);
+app.use('/odoo', express.static(path.join(__dirname, 'odoo/public'), {
+  etag: false, maxAge: 0, setHeaders: (res) => res.set('Cache-Control', 'no-store'),
+}));
+
 // Servir frontend em produção
 if (process.env.NODE_ENV === 'production') {
   app.use(express.static(path.join(__dirname, '../frontend/dist')));
@@ -37,6 +44,10 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', app: 'SalesRadar', version: '1.0.0' });
 });
 
-app.listen(PORT, () => {
-  console.log(`🎯 SalesRadar backend running on port ${PORT}`);
-});
+odoo.init()
+  .catch((e) => console.error('Odoo: erro a preparar tabelas:', e.message))
+  .finally(() => {
+    app.listen(PORT, () => {
+      console.log(`🎯 SalesRadar backend running on port ${PORT}`);
+    });
+  });

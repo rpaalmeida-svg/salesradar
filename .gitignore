@@ -3,3 +3,6 @@ node_modules/
 frontend/dist/
 backend/uploads/
 .DS_Store
+
+backend/data/
+backend/uploads/

@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Todos os produtos</title>
+<link rel="manifest" href="/odoo/manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#2f6fed">
+<link rel="apple-touch-icon" href="/odoo/icons/icon-180.png">
+<link rel="stylesheet" href="/odoo/app.css">
+<style>
+  .bar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+  .bar input[type=search] { flex: 1; min-width: 220px; font-size: 16px; }
+  .bar label { color: var(--ink-2); font-size: 13px; display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+  .count { color: var(--muted); font-size: 12.5px; margin: 0 0 8px 2px; }
+  /* tabela (desktop) */
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  th, td { padding: 7px 8px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
+  th { font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .03em; white-space: nowrap; cursor: pointer; user-select: none; }
+  th.num, td.num { text-align: right; }
+  td.ref { font-weight: 600; white-space: nowrap; }
+  td .name { color: var(--muted); font-size: 12px; display: block; max-width: 420px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  td .brand { color: var(--ink-2); font-size: 12px; }
+  .margin { display: inline-block; min-width: 52px; text-align: right; }
+  .margin.hidden { filter: blur(6px); cursor: pointer; }
+  .more { text-align: center; padding: 14px; }
+  /* lista (telemóvel) */
+  .list { display: none; }
+  .item { padding: 10px 12px; border-bottom: 1px solid var(--border); }
+  .item .r { font-weight: 650; display: flex; justify-content: space-between; gap: 8px; }
+  .item .n { color: var(--muted); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .item .kv { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 4px; font-size: 13px; }
+  .item .kv span b { font-variant-numeric: tabular-nums; }
+  @media (max-width: 800px) {
+    .tableWrap { display: none; }
+    .list { display: block; }
+    .bar label.hideMobile { display: none; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <a href="/odoo/index.html" class="back" title="Início">←</a>
+  <h1>Todos os produtos</h1>
+  <span class="meta" id="meta"></span>
+</header>
+<main>
+  <div class="bar">
+    <input type="search" id="q" placeholder="Referência, nome ou marca…" autocomplete="off" autofocus>
+    <select id="brand"><option value="">Todas as marcas</option></select>
+    <label><input type="checkbox" id="stock"> Só com stock</label>
+    <label><input type="checkbox" id="showMargin"> Mostrar margem</label>
+  </div>
+  <div class="count" id="count"></div>
+  <div class="card tableWrap">
+    <table>
+      <thead><tr>
+        <th data-k="ref">Referência</th>
+        <th data-k="stock_disp" class="num" title="Stock disponível (Odoo: virtual stock conservador)">Disponível</th>
+        <th data-k="on_hand" class="num" title="Quantidade física em armazém">Armazém</th>
+        <th data-k="incoming" class="num" title="Entrante (encomendas a fornecedor)">Entrante</th>
+        <th data-k="producing" class="num" title="A fabricar">Fabricando</th>
+        <th data-k="days_left" class="num" title="Dias de stock restantes">Dias</th>
+        <th data-k="pvi" class="num">PVI Iberia</th>
+        <th data-k="margin" class="num">Margem</th>
+      </tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+    <div class="more" id="moreT"></div>
+  </div>
+  <div class="card list" id="list"></div>
+</main>
+<div class="toast" id="toast"></div>
+<script src="/odoo/_shim.js"></script>
+<script>
+const $ = (s) => document.querySelector(s);
+const fmt = (n) => new Intl.NumberFormat('pt-PT').format(n);
+const eur = (n) => new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' }).format(n || 0);
+const pct = (n) => (n == null ? '' : n.toFixed(1).replace('.', ',') + ' %');
+const ago = (d) => { if (!d) return '—'; const m = Math.round((Date.now() - new Date(d)) / 60000); return m < 60 ? `há ${m} min` : `há ${Math.round(m / 60)} h`; };
+let state = { page: 0, sort: 'ref', dir: 'asc', rows: [], total: 0, loading: false };
+let timer;
+
+async function api(u) { const r = await fetch(u); if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }
+
+async function loadMeta() {
+  const m = await api('/api/products/meta');
+  $('#meta').textContent = m.total ? `${fmt(m.total)} referências · atualizado ${ago(m.taken_at)}` : 'Ainda sem catálogo — na extensão do Chrome clica em "Catálogo agora"';
+  const sel = $('#brand');
+  sel.innerHTML = '<option value="">Todas as marcas</option>' + m.brands.map((b) => `<option value="${b.name.replace(/"/g, '&quot;')}">${b.name} (${fmt(b.n)})</option>`).join('');
+}
+
+function params(page) {
+  const p = new URLSearchParams({ q: $('#q').value.trim(), brand: $('#brand').value, stock: $('#stock').checked ? '1' : '', sort: state.sort, dir: state.dir, page, limit: 100 });
+  return p.toString();
+}
+
+async function load(reset = true) {
+  if (state.loading) return;
+  state.loading = true;
+  if (reset) { state.page = 0; state.rows = []; }
+  try {
+    const d = await api('/api/products?' + params(state.page));
+    state.total = d.total;
+    state.rows = reset ? d.rows : state.rows.concat(d.rows);
+    render();
+  } catch (e) { toast('Erro: ' + e.message); }
+  state.loading = false;
+}
+
+function stockCls(v) { return v > 0 ? 'pos' : v < 0 ? 'neg' : ''; }
+
+function render() {
+  const showM = $('#showMargin').checked;
+  $('#count').textContent = state.total ? `${fmt(state.total)} resultado(s)${state.rows.length < state.total ? ` · a mostrar ${fmt(state.rows.length)}` : ''}` : 'Sem resultados';
+  $('#tbody').innerHTML = state.rows.map((p) => `<tr>
+    <td class="ref">${p.ref}<span class="name" title="${(p.name || '').replace(/"/g, '&quot;')}">${p.brand ? `<span class="brand">${p.brand}</span> · ` : ''}${p.name || ''}</span></td>
+    <td class="num ${stockCls(p.stock_disp)}">${fmt(p.stock_disp)}</td>
+    <td class="num">${fmt(p.on_hand)}</td>
+    <td class="num">${p.incoming ? fmt(p.incoming) : '<span class="sub">—</span>'}</td>
+    <td class="num">${p.producing ? fmt(p.producing) : '<span class="sub">—</span>'}</td>
+    <td class="num">${p.days_left ? fmt(Math.round(p.days_left)) : '<span class="sub">—</span>'}</td>
+    <td class="num">${p.pvi ? eur(p.pvi) : '<span class="sub">—</span>'}</td>
+    <td class="num"><span class="margin ${showM ? '' : 'hidden'}" title="${showM ? '' : 'clica para mostrar'}">${p.margin ? pct(p.margin) : '—'}</span></td>
+  </tr>`).join('');
+  $('#list').innerHTML = state.rows.map((p) => `<div class="item">
+    <div class="r"><span>${p.ref}</span><span class="${stockCls(p.stock_disp)}">${fmt(p.stock_disp)}</span></div>
+    <div class="n">${p.brand ? p.brand + ' · ' : ''}${p.name || ''}</div>
+    <div class="kv">
+      <span>Armazém <b>${fmt(p.on_hand)}</b></span>
+      ${p.incoming ? `<span>Entrante <b>${fmt(p.incoming)}</b></span>` : ''}
+      ${p.producing ? `<span>Fabricando <b>${fmt(p.producing)}</b></span>` : ''}
+      ${p.pvi ? `<span>PVI <b>${eur(p.pvi)}</b></span>` : ''}
+      ${p.margin ? `<span>Margem <b class="margin ${showM ? '' : 'hidden'}">${pct(p.margin)}</b></span>` : ''}
+    </div>
+  </div>`).join('');
+  const more = state.rows.length < state.total;
+  $('#moreT').innerHTML = more ? `<button id="moreBtn">Mostrar mais (${fmt(state.total - state.rows.length)} restantes)</button>` : '';
+  if (more) $('#moreBtn').addEventListener('click', () => { state.page++; load(false); });
+  if (more) { const b = document.createElement('div'); b.className = 'more'; b.innerHTML = `<button id="moreBtnM">Mostrar mais</button>`; $('#list').appendChild(b); $('#moreBtnM').addEventListener('click', () => { state.page++; load(false); }); }
+  document.querySelectorAll('.margin.hidden').forEach((m) => m.addEventListener('click', () => { $('#showMargin').checked = true; render(); }));
+}
+
+function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2500); }
+
+$('#q').addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(() => load(true), 250); });
+$('#brand').addEventListener('change', () => load(true));
+$('#stock').addEventListener('change', () => load(true));
+$('#showMargin').addEventListener('change', render);
+document.querySelectorAll('th[data-k]').forEach((th) => th.addEventListener('click', () => {
+  const k = th.dataset.k;
+  if (state.sort === k) state.dir = state.dir === 'asc' ? 'desc' : 'asc'; else { state.sort = k; state.dir = k === 'ref' ? 'asc' : 'desc'; }
+  load(true);
+}));
+
+// pesquisa vinda da página inicial (?q=...)
+const q0 = new URLSearchParams(location.search).get('q');
+if (q0) $('#q').value = q0;
+loadMeta().then(() => load(true));
+</script>
+</body>
+</html>

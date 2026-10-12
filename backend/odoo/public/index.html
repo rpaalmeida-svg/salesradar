@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Visiotech — Grandes Contas</title>
+<link rel="manifest" href="/odoo/manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Visiotech">
+<meta name="theme-color" content="#2f6fed">
+<link rel="apple-touch-icon" href="/odoo/icons/icon-180.png">
+<link rel="stylesheet" href="/odoo/app.css">
+<style>
+  .home { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 8px; }
+  @media (max-width: 700px) { .home { grid-template-columns: 1fr; } }
+  a.tile { display: block; text-decoration: none; color: inherit; padding: 22px 22px 18px; border-radius: 14px; background: var(--surface); border: 1px solid var(--border); box-shadow: var(--shadow); border-top: 5px solid var(--accent); min-height: 190px; }
+  a.tile.sales { border-top-color: #7c3aed; }
+  a.tile:active { transform: scale(.99); }
+  .tile h2 { margin: 0 0 4px; font-size: 22px; }
+  .tile p { margin: 0 0 14px; color: var(--muted); }
+  .stats { display: flex; gap: 18px; flex-wrap: wrap; }
+  .stat .v { font-size: 22px; font-weight: 650; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+  .stat .l { color: var(--muted); font-size: 12px; }
+  .stat .v.red { color: var(--critical); } .stat .v.green { color: var(--ok); } .stat .v.blue { color: var(--info); }
+  .go { margin-top: 14px; color: var(--accent); font-weight: 600; }
+  .hint { color: var(--muted); font-size: 12px; margin-top: 14px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Visiotech — Grandes Contas</h1>
+  <span class="meta" id="meta"></span>
+</header>
+<main>
+  <div class="home">
+    <a class="tile sales" href="/odoo/sales.html">
+      <h2>Vendas</h2>
+      <p>Os clientes Grandes Contas: este ano vs ano passado, top clientes, marcas, evolução mensal.</p>
+      <div class="stats" id="statsSales"><span class="sub">a carregar…</span></div>
+      <div class="go">Abrir vendas →</div>
+    </a>
+    <a class="tile" href="/odoo/warehouse.html">
+      <h2>Armazém</h2>
+      <p>Stock e preços de todos os produtos, e o painel Ajax com chegadas e sistemas.</p>
+      <div class="stats" id="statsWh"><span class="sub">a carregar…</span></div>
+      <div class="go">Abrir armazém →</div>
+    </a>
+  </div>
+  <div class="hint" id="hint"></div>
+</main>
+<script src="/odoo/_shim.js"></script>
+<script>
+const fmt = (n) => new Intl.NumberFormat('pt-PT').format(Math.round(n));
+const eur = (n) => new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n || 0);
+const ago = (d) => { if (!d) return '—'; const m = Math.round((Date.now() - new Date(d)) / 60000); return m < 60 ? `há ${m} min` : `há ${Math.round(m / 60)} h`; };
+async function api(u) { const r = await fetch(u); if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }
+(async () => {
+  try {
+    const s = await api('/api/sales/overview');
+    if (s.empty) document.getElementById('statsSales').innerHTML = '<span class="sub">Ainda sem dados — na extensão do Chrome clica em "Atualizar vendas".</span>';
+    else {
+      const t = s.totals; const d = t.delta_pct;
+      document.getElementById('statsSales').innerHTML =
+        `<div class="stat"><div class="v">${eur(t.ytd)}</div><div class="l">faturado este ano</div></div>
+         <div class="stat"><div class="v ${d == null ? '' : d >= 0 ? 'green' : 'red'}">${d == null ? '—' : (d >= 0 ? '+' : '') + d.toFixed(1).replace('.', ',') + ' %'}</div><div class="l">vs mesmo período ${new Date().getFullYear() - 1}</div></div>
+         <div class="stat"><div class="v">${t.clients}</div><div class="l">clientes</div></div>
+         <div class="stat"><div class="v" style="font-size:14px;padding-top:6px">${ago(s.taken_at)}</div><div class="l">atualizado</div></div>`;
+    }
+  } catch (e) { document.getElementById('statsSales').innerHTML = '<span class="sub">⚠ ' + e.message + '</span>'; }
+  try {
+    const [m, d] = await Promise.all([api('/api/products/meta'), api('/api/dashboard')]);
+    document.getElementById('statsWh').innerHTML =
+      `<div class="stat"><div class="v">${m.total ? fmt(m.total) : '—'}</div><div class="l">produtos vendáveis</div></div>
+       <div class="stat"><div class="v red">${d.kpi.rutura}</div><div class="l">Ajax em rutura</div></div>
+       <div class="stat"><div class="v blue">${d.kpi.a_chegar}</div><div class="l">Ajax a chegar</div></div>
+       <div class="stat"><div class="v" style="font-size:14px;padding-top:6px">${ago(d.updated_at)}</div><div class="l">atualizado</div></div>`;
+  } catch (e) { document.getElementById('statsWh').innerHTML = '<span class="sub">⚠ ' + e.message + '</span>'; }
+  if (/iPhone|iPad/.test(navigator.userAgent) && !window.navigator.standalone) {
+    document.getElementById('hint').textContent = 'No iPhone: Partilhar → "Adicionar ao ecrã principal" para abrir isto como uma app.';
+  }
+})();
+</script>
+</body>
+</html>
