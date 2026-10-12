@@ -1,5 +1,6 @@
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
+import OdooStatus from './OdooStatus';
 
 const menuItems = [
   { path: '/dashboard', label: 'Dashboard', icon: '📊' },
@@ -72,6 +73,8 @@ export default function Layout() {
             </div>
           ))}
         </nav>
+
+        {isAdmin && <OdooStatus />}
 
         <div style={styles.sidebarFooter}>
           <div style={styles.userInfo}>
