@@ -375,6 +375,71 @@ router.delete('/arrivals/batch/:batch', async (req, res) => {
 });
 
 
+// ---- Objectivos por cliente sobre os dados reais do Odoo ----
+// Objetivos guardados em plan_notes: targets[ano] (anual) e clients[id].targets[ano] (por cliente).
+// Para o ano seguinte, se não houver objetivo explícito, usa a estimativa "realista" do plano.
+router.get('/objectives', async (req, res) => {
+  const s = await getSales();
+  if (!s.data) return res.json({ empty: true });
+  const today = new Date();
+  const Y = today.getFullYear();
+  const year = Number(req.query.year) || Y;
+  const notes = await db.loadPlanNotes();
+  const plan = sales.buildPlan(s.data, Number(notes.growth) || 30, today);
+  const overview = sales.buildOverview(s.data, today);
+  const annual = Number(notes.targets?.[year]) || (year === Y + 1 ? plan.totals.target : 0);
+
+  // fração do ano já decorrida, com a sazonalidade do ano anterior quando existe
+  const prevMonths = plan.months_prev_year;
+  const prevTotal = prevMonths.reduce((a, b) => a + b, 0);
+  const mo = today.getMonth(); // 0-based: meses completos
+  const dayFrac = (today.getDate() - 1) / 30;
+  let elapsed = (mo + dayFrac) / 12;
+  if (year === Y && prevTotal > 0) elapsed = (prevMonths.slice(0, mo).reduce((a, b) => a + b, 0) + prevMonths[mo] * dayFrac) / prevTotal;
+  if (year < Y) elapsed = 1;
+  if (year > Y) elapsed = 0;
+
+  const clients = plan.clients.map((c) => {
+    const n = notes.clients?.[c.id] || {};
+    let target = Number(n.targets?.[year]) || 0;
+    let source = target ? 'definido' : null;
+    if (!target && year === Y + 1 && n.estimate != null && n.estimate !== '') { target = Number(n.estimate); source = 'plano'; }
+    const done = year === Y ? c.ytd : year === Y - 1 ? c.prev_full : 0;
+    const expected = target * elapsed;
+    const pct = target ? done / target : null;
+    const projection = year === Y ? c.forecast : year === Y - 1 ? c.prev_full : null;
+    let status = null;
+    if (target && year === Y) status = done >= expected ? 'no_caminho' : done >= expected * 0.7 ? 'em_risco' : 'atrasado';
+    return { id: c.id, name: c.name, ytd: c.ytd, prev_full: c.prev_full, delta_pct: c.delta_pct, share: c.share, target, source, done, expected, pct, projection, status, estimate_next: n.estimate ?? null, lever: n.lever || null };
+  });
+  const sumTargets = clients.reduce((a, c) => a + c.target, 0);
+  const doneTotal = year === Y ? overview.totals.ytd : year === Y - 1 ? overview.totals.prev_full : 0;
+  res.json({
+    year, today: plan.today, elapsed, annual_target: annual, sum_client_targets: sumTargets,
+    totals: { done: doneTotal, expected: annual * elapsed, projection: year === Y ? plan.totals.forecast_mid : year === Y - 1 ? overview.totals.prev_full : null,
+      no_caminho: clients.filter((c) => c.status === 'no_caminho').length, em_risco: clients.filter((c) => c.status === 'em_risco').length, atrasado: clients.filter((c) => c.status === 'atrasado').length,
+      with_target: clients.filter((c) => c.target > 0).length },
+    clients,
+  });
+});
+router.put('/objectives', async (req, res) => {
+  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Só administrador' });
+  const { year, annual, clients } = req.body || {};
+  if (!year) return res.status(400).json({ error: 'year em falta' });
+  const cur = await db.loadPlanNotes();
+  cur.clients = cur.clients || {}; cur.targets = cur.targets || {};
+  if (annual != null) cur.targets[year] = Number(annual) || 0;
+  for (const [id, v] of Object.entries(clients || {})) {
+    const c = cur.clients[id] || {};
+    c.targets = c.targets || {};
+    if (v == null || v === '' || Number(v) === 0) delete c.targets[year]; else c.targets[year] = Number(v);
+    cur.clients[id] = c;
+  }
+  cur.updated_at = new Date().toISOString();
+  await db.savePlanNotes(cur);
+  res.json({ ok: true });
+});
+
 // ---- ponte com a extensão a partir de qualquer browser ----
 // A página (qualquer browser) pede uma atualização; a extensão no Chrome vem buscar o pedido
 // de minuto a minuto e executa. O estado da extensão fica aqui para o sidebar o mostrar.

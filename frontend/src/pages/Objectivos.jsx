@@ -1,335 +1,177 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import api from '../services/api';
 
-function formatCurrency(value) {
-  return new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(value);
-}
+// Objectivos de facturação sobre os dados reais do Odoo (Grandes Contas).
+// Objectivo anual + objectivo por cliente; realizado, ritmo esperado (com a sazonalidade do ano
+// anterior), projecção e estado. Para o ano seguinte, o objectivo por cliente vem da estimativa
+// "realista" do plano (página Objectivo 2027) se não houver um valor definido aqui.
+
+const eur = (v) => new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(v || 0);
+const eurK = (v) => (Math.abs(v) >= 1e6 ? (v / 1e6).toFixed(2).replace('.', ',') + ' M€' : Math.abs(v) >= 1e3 ? Math.round(v / 1e3) + ' k€' : eur(v));
+const pct = (v) => (v == null ? '—' : (v >= 0 ? '+' : '') + v.toFixed(1).replace('.', ',') + ' %');
+
+const STATUS = {
+  no_caminho: ['No caminho', '#059669', '#ecfdf5'],
+  em_risco: ['Em risco', '#d97706', '#fffbeb'],
+  atrasado: ['Atrasado', '#dc2626', '#fef2f2'],
+};
 
 export default function Objectivos() {
-  const [year, setYear] = useState(new Date().getFullYear());
-  const [availableYears, setAvailableYears] = useState([]);
-  const [objectives, setObjectives] = useState([]);
-  const [clients, setClients] = useState([]);
-  const [clientSales, setClientSales] = useState({});
+  const Y = new Date().getFullYear();
+  const [year, setYear] = useState(Y);
+  const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [showForm, setShowForm] = useState(false);
-  const [editingId, setEditingId] = useState(null);
-  const [rows, setRows] = useState([{ client_name: '', target_value: '' }]);
+  const [edit, setEdit] = useState(false);
+  const [draftAnnual, setDraftAnnual] = useState('');
+  const [draft, setDraft] = useState({});
+  const [saving, setSaving] = useState('');
 
-  useEffect(() => {
-    fetchData();
-  }, [year]);
-
-  const fetchData = async () => {
+  const load = async () => {
     setLoading(true);
     try {
-      const [yearsRes, objRes, clientsRes] = await Promise.all([
-        api.get('/vendas/years'),
-        api.get(`/objetivos/${year}`).catch(() => ({ data: [] })),
-        api.get(`/vendas/by-client?year=${year}`),
-      ]);
-      setAvailableYears(yearsRes.data);
-      setObjectives(objRes.data);
-      setClients(clientsRes.data);
-
-      const salesMap = {};
-      clientsRes.data.forEach(c => { salesMap[c.client] = parseFloat(c.total); });
-      setClientSales(salesMap);
-    } catch (err) {
-      console.error('Erro:', err);
-    } finally {
-      setLoading(false);
-    }
+      const r = await api.get(`/odoo/objectives?year=${year}`);
+      setData(r.data);
+      setDraftAnnual(r.data.annual_target ? String(Math.round(r.data.annual_target)) : '');
+      const d = {}; (r.data.clients || []).forEach((c) => { d[c.id] = c.source === 'definido' ? String(Math.round(c.target)) : ''; });
+      setDraft(d);
+    } catch (e) { console.error(e); setData({ error: e.message }); }
+    finally { setLoading(false); }
   };
+  useEffect(() => { load(); }, [year]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const handleSubmit = async () => {
-    if (editingId) {
-      const row = rows[0];
-      if (!row.client_name || !row.target_value) return alert('Cliente e valor são obrigatórios');
-      try {
-        await api.put(`/objetivos/${editingId}`, { client_name: row.client_name, year, target_value: parseFloat(row.target_value) });
-        closeForm();
-        fetchData();
-      } catch (err) {
-        console.error('Erro:', err);
-        alert('Erro ao actualizar objectivo');
-      }
-      return;
-    }
-
-    const valid = rows.filter(r => r.client_name && r.target_value);
-    if (valid.length === 0) return alert('Preenche pelo menos um objectivo');
-
-    let errors = 0;
-    for (const row of valid) {
-      try {
-        await api.post('/objetivos', { client_name: row.client_name, year, target_value: parseFloat(row.target_value) });
-      } catch (err) {
-        console.error('Erro:', err);
-        errors++;
-      }
-    }
-    if (errors > 0) alert(`${errors} objectivo(s) não foram gravados (possível duplicado)`);
-    closeForm();
-    fetchData();
-  };
-
-  const closeForm = () => {
-    setShowForm(false);
-    setEditingId(null);
-    setRows([{ client_name: '', target_value: '' }]);
-  };
-
-  const handleEdit = (obj) => {
-    setRows([{ client_name: obj.client_name, target_value: obj.target_value }]);
-    setEditingId(obj.id);
-    setShowForm(true);
-  };
-
-  const handleDelete = async (id) => {
-    if (!window.confirm('Eliminar este objectivo?')) return;
+  const save = async () => {
+    setSaving('a guardar…');
     try {
-      await api.delete(`/objetivos/${id}`);
-      fetchData();
-    } catch (err) {
-      console.error('Erro:', err);
-    }
+      const clients = {}; Object.entries(draft).forEach(([id, v]) => { clients[id] = v === '' ? null : Number(v); });
+      await api.put('/odoo/objectives', { year, annual: draftAnnual === '' ? 0 : Number(draftAnnual), clients });
+      setSaving('guardado'); setEdit(false); load();
+    } catch { setSaving('erro ao guardar'); }
+    setTimeout(() => setSaving(''), 2000);
   };
 
-  const handleNew = () => {
-    setRows([{ client_name: '', target_value: '' }]);
-    setEditingId(null);
-    setShowForm(true);
+  // repartição automática: distribui o objectivo anual pelo peso de cada cliente este ano
+  const autoSplit = () => {
+    if (!data || !draftAnnual) return;
+    const total = Number(draftAnnual);
+    const d = {};
+    data.clients.forEach((c) => { d[c.id] = c.share > 0 ? String(Math.round((c.share * total) / 1000) * 1000) : ''; });
+    setDraft(d);
   };
 
-  const updateRow = (index, field, value) => {
-    const updated = [...rows];
-    updated[index] = { ...updated[index], [field]: value };
-    setRows(updated);
-  };
+  const sumDraft = useMemo(() => Object.values(draft).reduce((a, v) => a + (Number(v) || 0), 0), [draft]);
 
-  const addRow = () => {
-    if (rows.length < 20) setRows([...rows, { client_name: '', target_value: '' }]);
-  };
+  if (loading && !data) return <div style={styles.loading}>A carregar…</div>;
+  if (data?.empty) return <div style={styles.loading}>Ainda sem dados do Odoo — usa "Atualizar do Odoo" no menu.</div>;
+  if (data?.error) return <div style={styles.loading}>⚠ {data.error}</div>;
 
-  const removeRow = (index) => {
-    if (rows.length > 1) {
-      setRows(rows.filter((_, i) => i !== index));
-    } else {
-      setRows([{ client_name: '', target_value: '' }]);
-    }
-  };
-
-  if (loading) {
-    return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh', color: '#9ca3af', fontSize: '14px' }}>A carregar...</div>;
-  }
-
-  // Clientes já com objectivo (para excluir do dropdown)
-  const clientsWithObjective = new Set(objectives.map(o => o.client_name));
-  const selectedInRows = new Set(rows.map(r => r.client_name).filter(Boolean));
-
-  const getAvailableClients = (currentRowClient) => {
-    return clients.filter(c => {
-      if (c.client === currentRowClient) return true;
-      if (editingId) return true;
-      if (clientsWithObjective.has(c.client)) return false;
-      if (selectedInRows.has(c.client) && c.client !== currentRowClient) return false;
-      return true;
-    });
-  };
-
-  // Calcular métricas
-  const objectivesWithProgress = objectives.map(obj => {
-    const target = parseFloat(obj.target_value);
-    const actual = clientSales[obj.client_name] || 0;
-    const now = new Date();
-    const monthsElapsed = year === now.getFullYear() ? now.getMonth() + 1 : 12;
-    const expectedPct = (monthsElapsed / 12) * 100;
-    const actualPct = target > 0 ? (actual / target * 100) : 0;
-    const projected = monthsElapsed > 0 ? (actual / monthsElapsed) * 12 : 0;
-    const projectedPct = target > 0 ? (projected / target * 100) : 0;
-    const status = actualPct >= expectedPct ? 'on_track' : actualPct >= expectedPct * 0.7 ? 'at_risk' : 'behind';
-    return { ...obj, target, actual, actualPct, projected, projectedPct, expectedPct, status, monthsElapsed };
-  });
-
-  const totalTarget = objectivesWithProgress.reduce((s, o) => s + o.target, 0);
-  const totalActual = objectivesWithProgress.reduce((s, o) => s + o.actual, 0);
-  const totalPct = totalTarget > 0 ? (totalActual / totalTarget * 100) : 0;
-  const onTrack = objectivesWithProgress.filter(o => o.status === 'on_track').length;
-  const atRisk = objectivesWithProgress.filter(o => o.status === 'at_risk').length;
-  const behind = objectivesWithProgress.filter(o => o.status === 'behind').length;
-
-  const statusConfig = {
-    on_track: { label: 'No Caminho', color: '#16a34a', bg: '#f0fdf4', icon: '✅' },
-    at_risk: { label: 'Em Risco', color: '#f59e0b', bg: '#fffbeb', icon: '⚠️' },
-    behind: { label: 'Atrasado', color: '#dc2626', bg: '#fef2f2', icon: '🔴' },
-  };
-
-  const clientsWithoutObjective = clients.filter(c => !clientsWithObjective.has(c.client));
+  const t = data.totals;
+  const annual = data.annual_target;
+  const gapRitmo = t.done - t.expected;
+  const isCur = year === Y;
+  const clients = data.clients.slice().sort((a, b) => (b.target || 0) - (a.target || 0) || b.ytd - a.ytd);
+  const noTarget = clients.filter((c) => !c.target && (c.ytd > 0 || c.prev_full > 0));
 
   return (
     <div>
       <div style={styles.header}>
         <div>
-          <h2 style={styles.pageTitle}>Objectivos de Facturação</h2>
-          <p style={styles.pageSubtitle}>{objectives.length} objectivos definidos para {year}</p>
+          <h1 style={styles.pageTitle}>Objectivos de Facturação</h1>
+          <p style={styles.pageSubtitle}>
+            Grandes Contas · dados do Odoo até {new Date(data.today).toLocaleDateString('pt-PT')} · {t.with_target} de {data.clients.length} contas com objectivo
+            {year === Y + 1 && ' · objectivos por conta vêm do plano (Objectivo 2027) quando não estão definidos aqui'}
+          </p>
         </div>
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-          <select value={year} onChange={e => setYear(parseInt(e.target.value))} style={styles.yearSelect}>
-            {availableYears.map(y => <option key={y} value={y}>{y}</option>)}
+          <span style={{ fontSize: '12px', color: '#9ca3af' }}>{saving}</span>
+          <select value={year} onChange={(e) => setYear(Number(e.target.value))} style={styles.yearSelect}>
+            {[Y - 1, Y, Y + 1].map((y) => <option key={y} value={y}>{y}</option>)}
           </select>
-          <button onClick={handleNew} style={styles.addBtn}>+ Novo Objectivo</button>
+          {!edit && <button onClick={() => setEdit(true)} style={styles.addBtn}>✎ Definir objectivos</button>}
+          {edit && <>
+            <button onClick={autoSplit} style={styles.ghostBtn} title="Reparte o objectivo anual pelo peso de cada conta este ano">Repartir pelo peso</button>
+            <button onClick={() => { setEdit(false); load(); }} style={styles.ghostBtn}>Cancelar</button>
+            <button onClick={save} style={styles.addBtn}>Guardar</button>
+          </>}
         </div>
       </div>
 
-      {/* Summary */}
-      <div style={styles.summaryGrid}>
-        <div style={{ ...styles.summaryCard, borderLeft: '4px solid #667eea' }}>
-          <span style={styles.summaryLabel}>Objectivo Total</span>
-          <span style={styles.summaryValue}>{formatCurrency(totalTarget)}</span>
+      <div style={styles.cards}>
+        <div style={{ ...styles.card, borderLeftColor: '#667eea' }}>
+          <div style={styles.cardLabel}>Objectivo {year}</div>
+          {edit
+            ? <input type="number" step="50000" value={draftAnnual} onChange={(e) => setDraftAnnual(e.target.value)} style={styles.bigInput} placeholder="2000000" />
+            : <div style={styles.cardValue}>{annual ? eurK(annual) : '—'}</div>}
+          <div style={styles.cardSub}>{edit ? `soma por conta: ${eurK(sumDraft)}` : data.sum_client_targets ? `por conta: ${eurK(data.sum_client_targets)}${annual ? ` (${Math.round((data.sum_client_targets / annual) * 100)} % do anual)` : ''}` : 'sem objectivos por conta'}</div>
         </div>
-        <div style={{ ...styles.summaryCard, borderLeft: '4px solid #764ba2' }}>
-          <span style={styles.summaryLabel}>Realizado</span>
-          <span style={styles.summaryValue}>{formatCurrency(totalActual)}</span>
-          <span style={{ fontSize: '12px', color: totalPct >= 100 ? '#16a34a' : '#f59e0b', fontWeight: '600' }}>
-            {totalPct.toFixed(1)}%
-          </span>
+        <div style={{ ...styles.card, borderLeftColor: '#764ba2' }}>
+          <div style={styles.cardLabel}>Realizado</div>
+          <div style={styles.cardValue}>{eurK(t.done)}</div>
+          <div style={styles.cardSub}>{annual ? `${Math.round((t.done / annual) * 100)} % do objectivo` : '—'}</div>
         </div>
-        <div style={{ ...styles.summaryCard, borderLeft: '4px solid #16a34a' }}>
-          <span style={styles.summaryLabel}>No Caminho</span>
-          <span style={styles.summaryValue}>{onTrack}</span>
+        <div style={{ ...styles.card, borderLeftColor: gapRitmo >= 0 ? '#10b981' : '#ef4444' }}>
+          <div style={styles.cardLabel}>Ritmo</div>
+          <div style={{ ...styles.cardValue, color: gapRitmo >= 0 ? '#059669' : '#dc2626' }}>{isCur && annual ? (gapRitmo >= 0 ? '+' : '−') + eurK(Math.abs(gapRitmo)) : '—'}</div>
+          <div style={styles.cardSub}>{isCur && annual ? `face aos ${eurK(t.expected)} esperados a esta altura (${Math.round(data.elapsed * 100)} % do ano, sazonalidade de ${year - 1})` : 'só para o ano em curso'}</div>
         </div>
-        <div style={{ ...styles.summaryCard, borderLeft: '4px solid #dc2626' }}>
-          <span style={styles.summaryLabel}>Em Risco / Atrasado</span>
-          <span style={styles.summaryValue}>{atRisk + behind}</span>
+        <div style={{ ...styles.card, borderLeftColor: '#f59e0b' }}>
+          <div style={styles.cardLabel}>Projecção fecho</div>
+          <div style={styles.cardValue}>{t.projection ? eurK(t.projection) : '—'}</div>
+          <div style={styles.cardSub}>{t.projection && annual ? `${Math.round((t.projection / annual) * 100)} % do objectivo` : ''}{isCur ? ` · ${t.no_caminho} no caminho · ${t.em_risco} em risco · ${t.atrasado} atrasadas` : ''}</div>
         </div>
       </div>
 
-      {/* Modal */}
-      {showForm && (
-        <div style={styles.overlay}>
-          <div style={styles.modal}>
-            <div style={styles.modalHeader}>
-              <h3 style={styles.modalTitle}>{editingId ? 'Editar Objectivo' : 'Definir Objectivos'}</h3>
-              <button onClick={closeForm} style={styles.closeBtn}>✕</button>
-            </div>
-
-            {/* Header da lista */}
-            <div style={styles.rowHeader}>
-              <span style={{ flex: 1 }}>Cliente</span>
-              <span style={{ width: '140px' }}>Objectivo (€)</span>
-              <span style={{ width: '30px' }}></span>
-            </div>
-
-            {/* Linhas de objectivos */}
-            <div style={styles.rowList}>
-              {rows.map((row, idx) => (
-                <div key={idx} style={styles.objRow}>
-                  <select
-                    value={row.client_name}
-                    onChange={e => updateRow(idx, 'client_name', e.target.value)}
-                    style={{ ...styles.select, flex: 1 }}
-                  >
-                    <option value="">Seleccionar...</option>
-                    {getAvailableClients(row.client_name).map(c => (
-                      <option key={c.client} value={c.client}>{c.client}</option>
-                    ))}
-                  </select>
-                  <input
-                    type="number"
-                    value={row.target_value}
-                    onChange={e => updateRow(idx, 'target_value', e.target.value)}
-                    style={{ ...styles.input, width: '140px' }}
-                    placeholder="500000"
-                  />
-                  <button onClick={() => removeRow(idx)} style={styles.removeBtn}>✕</button>
-                </div>
-              ))}
-            </div>
-
-            {!editingId && (
-              <button onClick={addRow} style={styles.addRowBtn}>+ Adicionar cliente</button>
-            )}
-
-            <div style={styles.modalFooter}>
-              <button onClick={closeForm} style={styles.cancelBtn}>Cancelar</button>
-              <button onClick={handleSubmit} style={styles.saveBtn}>
-                {editingId ? 'Actualizar' : `Gravar ${rows.filter(r => r.client_name && r.target_value).length} objectivo(s)`}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Objectives table */}
-      {objectivesWithProgress.length === 0 ? (
-        <div style={styles.empty}>
-          <span style={{ fontSize: '40px' }}>🎯</span>
-          <p style={styles.emptyText}>Sem objectivos definidos para {year}</p>
-          <button onClick={handleNew} style={styles.addBtn}>+ Definir primeiro objectivo</button>
-        </div>
-      ) : (
-        <div style={styles.tableCard}>
-          <div style={styles.tableHeader}>
-            <span style={{ flex: 2 }}>Cliente</span>
-            <span style={styles.colRight}>Objectivo</span>
-            <span style={styles.colRight}>Realizado</span>
-            <span style={styles.colCenter}>Progresso</span>
-            <span style={styles.colRight}>Projecção Anual</span>
-            <span style={styles.colCenter}>Estado</span>
-            <span style={{ width: '60px' }}></span>
-          </div>
-          {objectivesWithProgress
-            .sort((a, b) => b.target - a.target)
-            .map(obj => {
-              const sc = statusConfig[obj.status];
-              const barColor = obj.status === 'on_track' ? '#16a34a' : obj.status === 'at_risk' ? '#f59e0b' : '#dc2626';
+      <div style={styles.tableCard}>
+        <table style={styles.table}>
+          <thead>
+            <tr>
+              <th style={styles.th}>Cliente</th>
+              <th style={{ ...styles.th, textAlign: 'right' }}>Objectivo</th>
+              <th style={{ ...styles.th, textAlign: 'right' }}>Realizado</th>
+              <th style={{ ...styles.th, textAlign: 'right' }}>vs {year - 1}</th>
+              <th style={{ ...styles.th, width: '22%' }}>Progresso</th>
+              <th style={{ ...styles.th, textAlign: 'right' }}>Projecção</th>
+              <th style={styles.th}>Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            {clients.map((c) => {
+              const st = STATUS[c.status];
+              const p = c.target ? Math.min(1, c.done / c.target) : 0;
+              const exp = c.target ? Math.min(1, data.elapsed) : 0;
               return (
-                <div key={obj.id} style={styles.tableRow}>
-                  <span style={{ flex: 2, fontWeight: '500', color: '#111827', fontSize: '13px' }}>{obj.client_name}</span>
-                  <span style={styles.colRight}>{formatCurrency(obj.target)}</span>
-                  <span style={styles.colRight}>{formatCurrency(obj.actual)}</span>
-                  <span style={styles.colCenter}>
-                    <div style={styles.progressContainer}>
-                      <div style={styles.progressBar}>
-                        <div style={{ ...styles.progressFill, width: `${Math.min(obj.actualPct, 100)}%`, background: barColor }} />
-                        <div style={{ ...styles.progressExpected, left: `${Math.min(obj.expectedPct, 100)}%` }} />
+                <tr key={c.id} style={styles.tr}>
+                  <td style={styles.td}>
+                    <div style={styles.name}>{c.name}</div>
+                    <div style={styles.sub}>{Math.round(c.share * 100)} % do faturado este ano{c.source === 'plano' ? ' · objectivo do plano' : ''}{c.lever ? ` · ${c.lever}` : ''}</div>
+                  </td>
+                  <td style={{ ...styles.td, textAlign: 'right' }}>
+                    {edit
+                      ? <input type="number" step="5000" value={draft[c.id] ?? ''} onChange={(e) => setDraft({ ...draft, [c.id]: e.target.value })} style={styles.input} placeholder={c.source === 'plano' ? String(Math.round(c.target)) : '—'} />
+                      : <span style={{ fontWeight: 600 }}>{c.target ? eur(c.target) : <span style={styles.muted}>—</span>}</span>}
+                  </td>
+                  <td style={{ ...styles.td, textAlign: 'right' }}>{eur(c.done)}</td>
+                  <td style={{ ...styles.td, textAlign: 'right', color: c.delta_pct == null ? '#9ca3af' : c.delta_pct >= 0 ? '#059669' : '#dc2626', fontWeight: 600 }}>{isCur ? pct(c.delta_pct) : '—'}</td>
+                  <td style={styles.td}>
+                    {c.target > 0 && isCur ? (
+                      <div style={styles.barWrap}>
+                        <div style={styles.bar}><div style={{ ...styles.barFill, width: `${p * 100}%`, background: st ? st[1] : '#667eea' }} /><div style={{ ...styles.marker, left: `${exp * 100}%` }} /></div>
+                        <span style={styles.barPct}>{Math.round(p * 100)} %</span>
                       </div>
-                      <span style={{ fontSize: '11px', color: '#374151', fontWeight: '600' }}>{obj.actualPct.toFixed(0)}%</span>
-                    </div>
-                  </span>
-                  <span style={{ ...styles.colRight, color: obj.projectedPct >= 100 ? '#16a34a' : '#dc2626' }}>
-                    {formatCurrency(obj.projected)}
-                  </span>
-                  <span style={styles.colCenter}>
-                    <span style={{ ...styles.statusBadge, color: sc.color, background: sc.bg }}>
-                      {sc.icon} {sc.label}
-                    </span>
-                  </span>
-                  <span style={{ width: '60px', display: 'flex', gap: '2px' }}>
-                    <button onClick={() => handleEdit(obj)} style={styles.actionBtn}>✏️</button>
-                    <button onClick={() => handleDelete(obj.id)} style={styles.actionBtn}>🗑️</button>
-                  </span>
-                </div>
+                    ) : <span style={styles.muted}>—</span>}
+                  </td>
+                  <td style={{ ...styles.td, textAlign: 'right' }}>{c.projection ? <span style={{ color: c.target ? (c.projection >= c.target ? '#059669' : '#dc2626') : '#374151', fontWeight: 600 }}>{eur(c.projection)}</span> : <span style={styles.muted}>—</span>}</td>
+                  <td style={styles.td}>{st ? <span style={{ ...styles.badge, color: st[1], background: st[2] }}>● {st[0]}</span> : <span style={styles.muted}>—</span>}</td>
+                </tr>
               );
             })}
-        </div>
-      )}
+          </tbody>
+        </table>
+      </div>
 
-      {/* Clientes sem objectivo */}
-      {clientsWithoutObjective.length > 0 && (
-        <div style={styles.missingCard}>
-          <h4 style={styles.missingTitle}>⚡ {clientsWithoutObjective.length} clientes sem objectivo definido</h4>
-          <div style={styles.missingList}>
-            {clientsWithoutObjective.slice(0, 8).map(c => (
-              <span key={c.client} style={styles.missingTag}>
-                {c.client} ({formatCurrency(parseFloat(c.total))})
-              </span>
-            ))}
-            {clientsWithoutObjective.length > 8 && (
-              <span style={{ ...styles.missingTag, background: '#e5e7eb' }}>+{clientsWithoutObjective.length - 8} mais</span>
-            )}
-          </div>
+      {noTarget.length > 0 && !edit && (
+        <div style={styles.warn}>
+          <div style={styles.warnTitle}>⚡ {noTarget.length} contas sem objectivo definido</div>
+          <div style={styles.chips}>{noTarget.map((c) => <span key={c.id} style={styles.chip}>{c.name.split(' - ')[0].split(',')[0]} ({eurK(c.ytd)})</span>)}</div>
         </div>
       )}
     </div>
@@ -337,317 +179,36 @@ export default function Objectivos() {
 }
 
 const styles = {
-  header: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: '24px',
-  },
-  pageTitle: {
-    fontSize: '20px',
-    fontWeight: '600',
-    color: '#111827',
-    margin: '0 0 4px 0',
-    letterSpacing: '-0.3px',
-  },
-  pageSubtitle: {
-    fontSize: '13px',
-    color: '#9ca3af',
-    margin: 0,
-  },
-  yearSelect: {
-    padding: '8px 16px',
-    border: '1px solid #e5e7eb',
-    borderRadius: '8px',
-    fontSize: '13px',
-    fontWeight: '500',
-    color: '#374151',
-    background: 'white',
-    cursor: 'pointer',
-    fontFamily: 'inherit',
-    outline: 'none',
-  },
-  addBtn: {
-    padding: '10px 20px',
-    background: 'linear-gradient(135deg, #667eea, #764ba2)',
-    color: 'white',
-    border: 'none',
-    borderRadius: '8px',
-    fontSize: '13px',
-    fontWeight: '600',
-    cursor: 'pointer',
-    fontFamily: 'inherit',
-  },
-  summaryGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(4, 1fr)',
-    gap: '16px',
-    marginBottom: '24px',
-  },
-  summaryCard: {
-    background: 'white',
-    borderRadius: '10px',
-    padding: '16px 20px',
-    border: '1px solid #e5e7eb',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '4px',
-  },
-  summaryValue: {
-    fontSize: '22px',
-    fontWeight: '700',
-    color: '#111827',
-  },
-  summaryLabel: {
-    fontSize: '11px',
-    color: '#9ca3af',
-    textTransform: 'uppercase',
-    letterSpacing: '0.3px',
-  },
-  tableCard: {
-    background: 'white',
-    border: '1px solid #e5e7eb',
-    borderRadius: '12px',
-    overflow: 'hidden',
-    marginBottom: '20px',
-  },
-  tableHeader: {
-    display: 'flex',
-    padding: '14px 20px',
-    background: '#f9fafb',
-    fontSize: '11px',
-    color: '#9ca3af',
-    textTransform: 'uppercase',
-    letterSpacing: '0.3px',
-    fontWeight: '600',
-    gap: '12px',
-    alignItems: 'center',
-  },
-  tableRow: {
-    display: 'flex',
-    padding: '14px 20px',
-    borderTop: '1px solid #f3f4f6',
-    fontSize: '13px',
-    color: '#374151',
-    gap: '12px',
-    alignItems: 'center',
-  },
-  colRight: {
-    width: '120px',
-    textAlign: 'right',
-    fontSize: '12px',
-    fontWeight: '500',
-  },
-  colCenter: {
-    width: '140px',
-    textAlign: 'center',
-  },
-  progressContainer: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-  },
-  progressBar: {
-    flex: 1,
-    height: '6px',
-    background: '#f3f4f6',
-    borderRadius: '3px',
-    overflow: 'visible',
-    position: 'relative',
-  },
-  progressFill: {
-    height: '100%',
-    borderRadius: '3px',
-    transition: 'width 0.5s ease',
-  },
-  progressExpected: {
-    position: 'absolute',
-    top: '-2px',
-    width: '2px',
-    height: '10px',
-    background: '#374151',
-    borderRadius: '1px',
-  },
-  statusBadge: {
-    fontSize: '10px',
-    fontWeight: '600',
-    padding: '3px 8px',
-    borderRadius: '4px',
-    whiteSpace: 'nowrap',
-  },
-  actionBtn: {
-    background: 'none',
-    border: 'none',
-    fontSize: '13px',
-    cursor: 'pointer',
-    padding: '2px 4px',
-  },
-  missingCard: {
-    background: '#fffbeb',
-    border: '1px solid #fde68a',
-    borderRadius: '10px',
-    padding: '16px 20px',
-  },
-  missingTitle: {
-    fontSize: '13px',
-    fontWeight: '600',
-    color: '#92400e',
-    margin: '0 0 10px 0',
-  },
-  missingList: {
-    display: 'flex',
-    flexWrap: 'wrap',
-    gap: '6px',
-  },
-  missingTag: {
-    fontSize: '11px',
-    color: '#6b7280',
-    background: '#fef3c7',
-    padding: '3px 10px',
-    borderRadius: '4px',
-  },
-  // Modal
-  overlay: {
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    background: 'rgba(0,0,0,0.4)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 1000,
-    backdropFilter: 'blur(4px)',
-  },
-  modal: {
-    background: 'white',
-    borderRadius: '16px',
-    padding: '28px',
-    width: '680px',
-    maxHeight: '85vh',
-    overflowY: 'auto',
-    boxShadow: '0 20px 60px rgba(0,0,0,0.15)',
-  },
-  modalHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '20px',
-  },
-  modalTitle: {
-    fontSize: '18px',
-    fontWeight: '600',
-    color: '#111827',
-    margin: 0,
-  },
-  closeBtn: {
-    background: 'none',
-    border: 'none',
-    fontSize: '18px',
-    color: '#9ca3af',
-    cursor: 'pointer',
-  },
-  rowHeader: {
-    display: 'flex',
-    gap: '8px',
-    padding: '0 0 8px 0',
-    fontSize: '11px',
-    color: '#9ca3af',
-    textTransform: 'uppercase',
-    letterSpacing: '0.3px',
-    fontWeight: '600',
-    borderBottom: '1px solid #f3f4f6',
-    marginBottom: '8px',
-  },
-  rowList: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '6px',
-    marginBottom: '12px',
-  },
-  objRow: {
-    display: 'flex',
-    gap: '8px',
-    alignItems: 'center',
-  },
-  addRowBtn: {
-    padding: '8px 16px',
-    background: 'none',
-    border: '1px dashed #d1d5db',
-    borderRadius: '8px',
-    fontSize: '12px',
-    fontWeight: '600',
-    color: '#667eea',
-    cursor: 'pointer',
-    fontFamily: 'inherit',
-    width: '100%',
-    marginBottom: '20px',
-  },
-  removeBtn: {
-    background: 'none',
-    border: 'none',
-    fontSize: '14px',
-    color: '#9ca3af',
-    cursor: 'pointer',
-    padding: '4px',
-    width: '30px',
-    textAlign: 'center',
-  },
-  input: {
-    padding: '10px 12px',
-    border: '1px solid #e5e7eb',
-    borderRadius: '8px',
-    fontSize: '13px',
-    outline: 'none',
-    fontFamily: 'inherit',
-  },
-  select: {
-    padding: '10px 12px',
-    border: '1px solid #e5e7eb',
-    borderRadius: '8px',
-    fontSize: '13px',
-    outline: 'none',
-    fontFamily: 'inherit',
-    background: 'white',
-    cursor: 'pointer',
-  },
-  modalFooter: {
-    display: 'flex',
-    justifyContent: 'flex-end',
-    gap: '10px',
-  },
-  cancelBtn: {
-    padding: '10px 20px',
-    border: '1px solid #e5e7eb',
-    borderRadius: '8px',
-    fontSize: '13px',
-    background: 'white',
-    color: '#374151',
-    cursor: 'pointer',
-    fontFamily: 'inherit',
-  },
-  saveBtn: {
-    padding: '10px 20px',
-    background: 'linear-gradient(135deg, #667eea, #764ba2)',
-    color: 'white',
-    border: 'none',
-    borderRadius: '8px',
-    fontSize: '13px',
-    fontWeight: '600',
-    cursor: 'pointer',
-    fontFamily: 'inherit',
-  },
-  empty: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: '400px',
-    gap: '12px',
-  },
-  emptyText: {
-    fontSize: '13px',
-    color: '#9ca3af',
-  },
+  loading: { padding: '40px', color: '#6b7280', fontSize: '14px' },
+  header: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px', gap: '16px', flexWrap: 'wrap' },
+  pageTitle: { fontSize: '20px', fontWeight: '600', color: '#111827', margin: '0 0 4px 0', letterSpacing: '-0.3px' },
+  pageSubtitle: { fontSize: '13px', color: '#9ca3af', margin: 0 },
+  yearSelect: { padding: '8px 16px', border: '1px solid #e5e7eb', borderRadius: '8px', fontSize: '13px', fontWeight: '500', color: '#374151', background: 'white', cursor: 'pointer', fontFamily: 'inherit', outline: 'none' },
+  addBtn: { padding: '10px 20px', background: 'linear-gradient(135deg, #667eea, #764ba2)', color: 'white', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'inherit' },
+  ghostBtn: { padding: '10px 14px', background: 'white', color: '#374151', border: '1px solid #e5e7eb', borderRadius: '8px', fontSize: '13px', fontWeight: '500', cursor: 'pointer', fontFamily: 'inherit' },
+  cards: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '24px' },
+  card: { background: 'white', border: '1px solid #e5e7eb', borderLeft: '4px solid', borderRadius: '12px', padding: '18px 20px' },
+  cardLabel: { fontSize: '11px', fontWeight: '600', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em' },
+  cardValue: { fontSize: '26px', fontWeight: '700', color: '#111827', marginTop: '6px', letterSpacing: '-0.5px', fontVariantNumeric: 'tabular-nums' },
+  cardSub: { fontSize: '12px', color: '#6b7280', marginTop: '4px', lineHeight: 1.4 },
+  bigInput: { fontSize: '22px', fontWeight: '700', width: '100%', marginTop: '4px', padding: '4px 8px', border: '1px solid #c7d2fe', borderRadius: '8px', fontFamily: 'inherit' },
+  tableCard: { background: 'white', border: '1px solid #e5e7eb', borderRadius: '12px', overflow: 'hidden' },
+  table: { width: '100%', borderCollapse: 'collapse', fontVariantNumeric: 'tabular-nums' },
+  th: { textAlign: 'left', padding: '12px 16px', fontSize: '11px', fontWeight: '600', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', background: '#f9fafb', borderBottom: '1px solid #e5e7eb' },
+  tr: { borderBottom: '1px solid #f3f4f6' },
+  td: { padding: '12px 16px', fontSize: '13px', color: '#374151', verticalAlign: 'middle' },
+  name: { fontWeight: '600', color: '#111827' },
+  sub: { fontSize: '11px', color: '#9ca3af', marginTop: '2px' },
+  muted: { color: '#d1d5db' },
+  input: { width: '120px', padding: '6px 8px', border: '1px solid #e5e7eb', borderRadius: '6px', fontSize: '13px', textAlign: 'right', fontFamily: 'inherit' },
+  barWrap: { display: 'flex', alignItems: 'center', gap: '10px' },
+  bar: { position: 'relative', flex: 1, height: '8px', background: '#f3f4f6', borderRadius: '4px', overflow: 'visible' },
+  barFill: { height: '100%', borderRadius: '4px' },
+  marker: { position: 'absolute', top: '-3px', width: '2px', height: '14px', background: '#111827', borderRadius: '1px' },
+  barPct: { fontSize: '12px', fontWeight: '600', color: '#374151', minWidth: '38px', textAlign: 'right' },
+  badge: { display: 'inline-block', padding: '3px 10px', borderRadius: '999px', fontSize: '11px', fontWeight: '600' },
+  warn: { marginTop: '20px', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '12px', padding: '14px 18px' },
+  warnTitle: { fontSize: '13px', fontWeight: '600', color: '#92400e', marginBottom: '8px' },
+  chips: { display: 'flex', flexWrap: 'wrap', gap: '6px' },
+  chip: { fontSize: '11px', background: '#fef3c7', color: '#92400e', padding: '4px 10px', borderRadius: '6px' },
 };
