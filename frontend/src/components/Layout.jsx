@@ -33,7 +33,7 @@ export default function Layout() {
 
   const isAdmin = user?.role === 'admin';
   const sections = [
-    { title: 'Vendas', items: isAdmin ? [...menuItems, ...odooSalesItems] : menuItems },
+    { title: 'Vendas', items: isAdmin ? [menuItems[0], ...odooSalesItems, ...menuItems.slice(1)] : menuItems },
     ...(isAdmin ? [{ title: 'Stock', items: odooStockItems }] : []),
     {
       title: null,
