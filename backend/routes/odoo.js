@@ -375,6 +375,51 @@ router.delete('/arrivals/batch/:batch', async (req, res) => {
 });
 
 
+// ---- Resumo para o Dashboard (tudo a partir do Odoo) ----
+const FAMILIES = [
+  [/^ajax/i, 'Ajax'], [/^hikvision|^hik\b/i, 'Hikvision'], [/^safire/i, 'Safire'], [/^uniview|^unv/i, 'Uniview'],
+  [/^(western digital|wd|seagate|toshiba)/i, 'Discos'], [/^ruijie|^reyee/i, 'Ruijie / Reyee'], [/^zkteco/i, 'ZKTeco'],
+  [/^dahua|^x-security|^xs/i, 'Dahua / X-Security'], [/^marca blanca|^white label/i, 'Marca branca'], [/^milesight/i, 'Milesight'],
+  [/^akuvox/i, 'Akuvox'], [/^iloq/i, 'iLOQ'], [/^avigilon|^pelco|^motorola/i, 'Avigilon / Pelco'], [/^yli/i, 'Yli'],
+];
+const familyOf = (b) => { for (const [re, name] of FAMILIES) if (re.test(b || '')) return name; return b || '(sem marca)'; };
+
+router.get('/dashboard-summary', async (req, res) => {
+  const s = await getSales();
+  if (!s.data) return res.json({ empty: true });
+  const today = new Date(); const Y = today.getFullYear();
+  const notes = await db.loadPlanNotes();
+  const ov = sales.buildOverview(s.data, today);
+  const plan = sales.buildPlan(s.data, Number(notes.growth) || 30, today);
+  const annual = Number(notes.targets?.[Y]) || 0;
+  const prevMonths = plan.months_prev_year; const prevTotal = prevMonths.reduce((a, b) => a + b, 0);
+  const mo = today.getMonth(); const dayFrac = (today.getDate() - 1) / 30;
+  const elapsed = prevTotal > 0 ? (prevMonths.slice(0, mo).reduce((a, b) => a + b, 0) + prevMonths[mo] * dayFrac) / prevTotal : (mo + dayFrac) / 12;
+
+  // famílias de marca
+  const fam = new Map();
+  for (const b of ov.brands) {
+    const k = familyOf(b.brand);
+    const f = fam.get(k) || { family: k, ytd: 0, ytd_prev: 0, cost_ytd: 0, brands: [] };
+    f.ytd += b.ytd; f.ytd_prev += b.ytd_prev; f.cost_ytd += b.cost_ytd || 0; f.brands.push(b.brand); fam.set(k, f);
+  }
+  const families = Array.from(fam.values()).map((f) => ({ ...f, delta_pct: f.ytd_prev ? ((f.ytd - f.ytd_prev) / Math.abs(f.ytd_prev)) * 100 : null, margin_pct: f.ytd ? ((f.ytd - f.cost_ytd) / f.ytd) * 100 : null, share: ov.totals.ytd ? f.ytd / ov.totals.ytd : 0 })).sort((a, b) => b.ytd - a.ytd);
+  const top = families.slice(0, 6); const rest = families.slice(6);
+  if (rest.length) top.push({ family: `Outras (${rest.length})`, ytd: rest.reduce((a, f) => a + f.ytd, 0), ytd_prev: rest.reduce((a, f) => a + f.ytd_prev, 0), share: rest.reduce((a, f) => a + f.share, 0), delta_pct: null, margin_pct: null, brands: [] });
+
+  let stock = null;
+  try { const d = await buildDashboard(false); stock = { updated_at: d.updated_at, ...d.kpi }; } catch { /* sem stock */ }
+
+  res.json({
+    taken_at: new Date(s.at).toISOString(), today: plan.today, year: Y,
+    totals: { ...ov.totals, annual_target: annual, expected: annual * elapsed, elapsed, projection: plan.totals.forecast_mid, projection_low: plan.totals.forecast_low, projection_high: plan.totals.forecast_high, clients_80: plan.totals.clients_80 },
+    monthly: ov.monthly, target_monthly: annual ? annual / 12 : 0,
+    families: top,
+    top_clients: ov.clients.slice(0, 5).map((c) => ({ id: c.id, name: c.name, ytd: c.ytd, ytd_prev: c.ytd_prev, delta_pct: c.delta_pct, share: ov.totals.ytd ? c.ytd / ov.totals.ytd : 0, margin_pct: c.margin_pct })),
+    stock,
+  });
+});
+
 // ---- Objectivos por cliente sobre os dados reais do Odoo ----
 // Objetivos guardados em plan_notes: targets[ano] (anual) e clients[id].targets[ano] (por cliente).
 // Para o ano seguinte, se não houver objetivo explícito, usa a estimativa "realista" do plano.

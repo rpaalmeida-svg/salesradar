@@ -5,9 +5,6 @@ import Login from './pages/Login';
 import ChangePassword from './pages/ChangePassword';
 import Dashboard from './pages/Dashboard';
 import Admin from './pages/Admin';
-import Clientes from './pages/Clientes';
-import Marcas from './pages/Marcas';
-import Categorias from './pages/Categorias';
 import Insights from './pages/Insights';
 import Estrategia from './pages/Estrategia';
 import Objectivos from './pages/Objectivos';
@@ -60,9 +57,6 @@ function AppRoutes() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
         <Route path="/" element={<Navigate to="/dashboard" />} />
-        <Route path="/clientes" element={<Clientes />} />
-        <Route path="/marcas" element={<Marcas />} />
-        <Route path="/categorias" element={<Categorias />} />
         <Route path="/insights" element={<Insights />} />
         <Route path="/estrategia" element={<Estrategia />} />
         <Route path="/objectivos" element={<Objectivos />} />
