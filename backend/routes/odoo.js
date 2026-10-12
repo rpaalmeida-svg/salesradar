@@ -375,6 +375,29 @@ router.delete('/arrivals/batch/:batch', async (req, res) => {
 });
 
 
+// ---- ponte com a extensão a partir de qualquer browser ----
+// A página (qualquer browser) pede uma atualização; a extensão no Chrome vem buscar o pedido
+// de minuto a minuto e executa. O estado da extensão fica aqui para o sidebar o mostrar.
+let pushRequest = null; // { at, by }
+let extStatus = { status: null, seen_at: null, version: null };
+
+router.post('/push-request', (req, res) => {
+  pushRequest = { at: new Date().toISOString(), by: req.user.name || req.user.email || req.user.role };
+  res.json({ ok: true, queued: true, ext_seen_at: extStatus.seen_at });
+});
+router.get('/push-request', (req, res) => {
+  // a extensão chama isto; devolve e limpa o pedido
+  const r = pushRequest; pushRequest = null;
+  res.json({ requested: !!r, request: r });
+});
+router.post('/ext-status', (req, res) => {
+  extStatus = { status: req.body?.status || null, version: req.body?.version || null, seen_at: new Date().toISOString() };
+  res.json({ ok: true });
+});
+router.get('/ext-status', async (req, res) => {
+  res.json({ ...extStatus, pending: !!pushRequest });
+});
+
 // Importa os dados da app antiga (Ajax Stock no Railway): chegadas, classificação, notas do plano e snapshots.
 // POST { url, password }  — só administrador
 router.post('/import', async (req, res) => {
