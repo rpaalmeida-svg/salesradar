@@ -225,7 +225,7 @@ export default function Comissoes() {
               </div>
             ) : previewImage ? (
               <div style={styles.dropContent}>
-                <img src={previewImage} alt="Preview" style={{ maxHeight: '120px', borderRadius: '8px', border: '1px solid #e5e7eb' }} />
+                <img src={previewImage} alt="Preview" style={{ maxHeight: '120px', borderRadius: '8px', border: '1px solid var(--border)' }} />
                 <p style={styles.dropText}>Imagem carregada</p>
               </div>
             ) : (
@@ -267,7 +267,7 @@ export default function Comissoes() {
                     <div key={i} style={{
                       ...styles.ocrRow,
                       background: isTarget ? 'var(--ok-bg)' : isMax ? 'var(--crit-bg)' : 'var(--surface)',
-                      borderLeft: isTarget ? '3px solid #16a34a' : isMax ? '3px solid #dc2626' : '3px solid transparent',
+                      borderLeft: isTarget ? '3px solid var(--ok)' : isMax ? '3px solid var(--crit)' : '3px solid transparent',
                     }}>
                       <span style={{ ...styles.ocrCol, fontWeight: '600', color: 'var(--muted-2)' }}>{tierNum}</span>
                       <input type="number" step="0.01" value={t.semester} onChange={e => updateTier(i, 'semester', e.target.value)} style={styles.ocrInput} />
@@ -314,7 +314,7 @@ export default function Comissoes() {
               <span style={styles.kpiLabel}>Facturação Ajustada</span>
               <span style={styles.kpiValue}>{formatCurrency(adjustedBilling)}</span>
             </div>
-            <div style={{ ...styles.kpiCard, borderLeft: '4px solid #16a34a' }}>
+            <div style={{ ...styles.kpiCard, borderLeft: '4px solid var(--ok)' }}>
               <span style={styles.kpiLabel}>Comissão Actual</span>
               <span style={{ ...styles.kpiValue, color: 'var(--ok)', fontSize: '26px' }}>
                 {currentTier ? formatCurrency(parseFloat(currentTier.bonus)) : '—'}
@@ -354,7 +354,7 @@ export default function Comissoes() {
                 <div key={t.id} style={{
                   ...styles.tierRow,
                   background: isCurrent ? 'var(--ok-bg)' : isTarget ? 'var(--warn-bg)' : isMax ? 'var(--crit-bg)' : 'var(--surface)',
-                  borderLeft: isCurrent ? '3px solid #16a34a' : isTarget ? '3px solid #f59e0b' : isMax ? '3px solid #dc2626' : '3px solid transparent',
+                  borderLeft: isCurrent ? '3px solid var(--ok)' : isTarget ? '3px solid var(--warn)' : isMax ? '3px solid var(--crit)' : '3px solid transparent',
                   opacity: isReached ? 1 : 0.5,
                 }}>
                   <span style={{ ...styles.tierCol, fontWeight: '600', color: isCurrent ? 'var(--ok)' : 'var(--muted-2)' }}>
@@ -404,7 +404,7 @@ const styles = {
   },
   yearSelect: {
     padding: '8px 16px',
-    border: '1px solid #e5e7eb',
+    border: '1px solid var(--border)',
     borderRadius: '8px',
     fontSize: '13px',
     fontWeight: '500',
@@ -416,7 +416,7 @@ const styles = {
   },
   // Drop zone
   dropZone: {
-    border: '2px dashed #d1d5db',
+    border: '2px dashed var(--muted-3)',
     borderRadius: '12px',
     padding: '32px',
     textAlign: 'center',
@@ -443,7 +443,7 @@ const styles = {
   // OCR Results
   ocrCard: {
     background: 'var(--surface)',
-    border: '1px solid #e5e7eb',
+    border: '1px solid var(--border)',
     borderRadius: '12px',
     marginTop: '16px',
     overflow: 'hidden',
@@ -453,7 +453,7 @@ const styles = {
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: '16px 20px',
-    borderBottom: '1px solid #f3f4f6',
+    borderBottom: '1px solid var(--border-2)',
   },
   ocrTitle: {
     fontSize: '14px',
@@ -463,7 +463,7 @@ const styles = {
   },
   confirmBtn: {
     padding: '8px 20px',
-    background: 'linear-gradient(135deg, #16a34a, #15803d)',
+    background: 'linear-gradient(135deg, var(--ok), #15803d)',
     color: 'white',
     border: 'none',
     borderRadius: '8px',
@@ -488,7 +488,7 @@ const styles = {
     padding: '6px 20px',
     gap: '8px',
     alignItems: 'center',
-    borderBottom: '1px solid #f9fafb',
+    borderBottom: '1px solid var(--surface-2)',
   },
   ocrCol: {
     width: '35px',
@@ -498,7 +498,7 @@ const styles = {
   ocrInput: {
     flex: 1,
     padding: '6px 8px',
-    border: '1px solid #e5e7eb',
+    border: '1px solid var(--border)',
     borderRadius: '6px',
     fontSize: '12px',
     outline: 'none',
@@ -516,7 +516,7 @@ const styles = {
     background: 'var(--surface)',
     borderRadius: '10px',
     padding: '16px 20px',
-    border: '1px solid #e5e7eb',
+    border: '1px solid var(--border)',
     display: 'flex',
     flexDirection: 'column',
     gap: '6px',
@@ -555,7 +555,7 @@ const styles = {
     gap: '10px',
     padding: '14px 20px',
     background: 'var(--info-bg)',
-    border: '1px solid #bfdbfe',
+    border: '1px solid var(--info-border)',
     borderRadius: '10px',
     marginBottom: '16px',
   },
@@ -566,7 +566,7 @@ const styles = {
   // Tiers table
   tiersCard: {
     background: 'var(--surface)',
-    border: '1px solid #e5e7eb',
+    border: '1px solid var(--border)',
     borderRadius: '12px',
     overflow: 'hidden',
   },
@@ -576,7 +576,7 @@ const styles = {
     color: 'var(--ink)',
     margin: 0,
     padding: '16px 20px',
-    borderBottom: '1px solid #f3f4f6',
+    borderBottom: '1px solid var(--border-2)',
   },
   tiersHeader: {
     display: 'flex',
@@ -594,7 +594,7 @@ const styles = {
     padding: '10px 20px',
     gap: '8px',
     alignItems: 'center',
-    borderBottom: '1px solid #f9fafb',
+    borderBottom: '1px solid var(--surface-2)',
     transition: 'all 0.15s',
   },
   tierCol: {

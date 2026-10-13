@@ -588,7 +588,7 @@ export default function OrgTree({ strategyId, clientName, onClose }) {
           <span style={{
             ...styles.legendDot,
             borderStyle: 'dashed',
-            border: '1px dashed #9ca3af'
+            border: '1px dashed var(--muted-2)'
           }} /> Por identificar
         </span>
       </div>
@@ -695,7 +695,7 @@ const styles = {
     display: 'flex',
     gap: '16px',
     background: 'var(--surface)',
-    border: '1px solid #e5e7eb',
+    border: '1px solid var(--border)',
     borderRadius: '10px',
     padding: '16px 24px',
     marginBottom: '16px',
@@ -753,7 +753,7 @@ const styles = {
   // Tree
   treeContainer: {
     background: 'var(--surface)',
-    border: '1px solid #e5e7eb',
+    border: '1px solid var(--border)',
     borderRadius: '10px',
     padding: '20px',
   },
@@ -763,7 +763,7 @@ const styles = {
     gap: '8px',
     padding: '8px 12px',
     borderRadius: '8px',
-    border: '1px solid #f3f4f6',
+    border: '1px solid var(--border-2)',
     marginBottom: '4px',
     transition: 'all 0.15s',
   },
@@ -831,7 +831,7 @@ const styles = {
   },
   addChildBtn: {
     background: 'none',
-    border: '1px solid #e5e7eb',
+    border: '1px solid var(--border)',
     borderRadius: '4px',
     fontSize: '14px',
     color: 'var(--accent)',
@@ -843,7 +843,7 @@ const styles = {
     marginTop: '2px',
   },
   childrenContainer: {
-    borderLeft: '2px solid #e5e7eb',
+    borderLeft: '2px solid var(--border)',
     marginLeft: '9px',
     paddingLeft: '0',
   },
@@ -942,7 +942,7 @@ const styles = {
   },
   cardInput: {
     padding: '9px 12px',
-    border: '1px solid #e5e7eb',
+    border: '1px solid var(--border)',
     borderRadius: '8px',
     fontSize: '13px',
     outline: 'none',
@@ -950,7 +950,7 @@ const styles = {
   },
   cardSelect: {
     padding: '9px 12px',
-    border: '1px solid #e5e7eb',
+    border: '1px solid var(--border)',
     borderRadius: '8px',
     fontSize: '13px',
     outline: 'none',
@@ -960,7 +960,7 @@ const styles = {
   },
   cardTextarea: {
     padding: '9px 12px',
-    border: '1px solid #e5e7eb',
+    border: '1px solid var(--border)',
     borderRadius: '8px',
     fontSize: '13px',
     outline: 'none',
@@ -969,7 +969,7 @@ const styles = {
     lineHeight: '1.5',
   },
   actionSeparator: {
-    borderTop: '1px solid #e5e7eb',
+    borderTop: '1px solid var(--border)',
     margin: '20px 0 16px',
     paddingTop: '16px',
   },
@@ -984,11 +984,11 @@ const styles = {
     gap: '10px',
     marginTop: '24px',
     paddingTop: '16px',
-    borderTop: '1px solid #f3f4f6',
+    borderTop: '1px solid var(--border-2)',
   },
   deleteBtn: {
     padding: '9px 16px',
-    border: '1px solid #fecaca',
+    border: '1px solid var(--crit-border)',
     borderRadius: '8px',
     fontSize: '13px',
     background: 'var(--crit-bg)',
@@ -998,7 +998,7 @@ const styles = {
   },
   cancelBtn: {
     padding: '9px 18px',
-    border: '1px solid #e5e7eb',
+    border: '1px solid var(--border)',
     borderRadius: '8px',
     fontSize: '13px',
     background: 'var(--surface)',

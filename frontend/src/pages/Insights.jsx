@@ -61,19 +61,19 @@ export default function Insights() {
 
       {/* Summary cards */}
       <div style={styles.summaryGrid}>
-        <div style={{ ...styles.summaryCard, borderLeft: '4px solid #dc2626' }}>
+        <div style={{ ...styles.summaryCard, borderLeft: '4px solid var(--crit)' }}>
           <span style={styles.summaryValue}>{data.critical}</span>
           <span style={styles.summaryLabel}>Críticos</span>
         </div>
-        <div style={{ ...styles.summaryCard, borderLeft: '4px solid #f59e0b' }}>
+        <div style={{ ...styles.summaryCard, borderLeft: '4px solid var(--warn)' }}>
           <span style={styles.summaryValue}>{data.warnings}</span>
           <span style={styles.summaryLabel}>Avisos</span>
         </div>
-        <div style={{ ...styles.summaryCard, borderLeft: '4px solid #16a34a' }}>
+        <div style={{ ...styles.summaryCard, borderLeft: '4px solid var(--ok)' }}>
           <span style={styles.summaryValue}>{data.positive}</span>
           <span style={styles.summaryLabel}>Positivos</span>
         </div>
-        <div style={{ ...styles.summaryCard, borderLeft: '4px solid #667eea' }}>
+        <div style={{ ...styles.summaryCard, borderLeft: '4px solid var(--accent)' }}>
           <span style={styles.summaryValue}>{data.totalInsights}</span>
           <span style={styles.summaryLabel}>Total</span>
         </div>
@@ -162,7 +162,7 @@ const styles = {
   },
   yearSelect: {
     padding: '8px 16px',
-    border: '1px solid #e5e7eb',
+    border: '1px solid var(--border)',
     borderRadius: '8px',
     fontSize: '13px',
     fontWeight: '500',
@@ -182,7 +182,7 @@ const styles = {
     background: 'var(--surface)',
     borderRadius: '10px',
     padding: '16px 20px',
-    border: '1px solid #e5e7eb',
+    border: '1px solid var(--border)',
     display: 'flex',
     flexDirection: 'column',
     gap: '4px',
@@ -211,7 +211,7 @@ const styles = {
   },
   filterBtn: {
     padding: '8px 16px',
-    border: '1px solid #e5e7eb',
+    border: '1px solid var(--border)',
     borderRadius: '8px',
     fontSize: '12px',
     fontWeight: '500',
@@ -221,7 +221,7 @@ const styles = {
   },
   sortSelect: {
     padding: '8px 14px',
-    border: '1px solid #e5e7eb',
+    border: '1px solid var(--border)',
     borderRadius: '8px',
     fontSize: '12px',
     fontFamily: 'inherit',

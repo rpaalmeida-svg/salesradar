@@ -613,7 +613,7 @@ const styles = {
   // Form
   formCard: {
     background: 'var(--surface)',
-    border: '1px solid #e5e7eb',
+    border: '1px solid var(--border)',
     borderRadius: '12px',
     padding: '24px',
     marginBottom: '24px',
@@ -642,7 +642,7 @@ const styles = {
   },
   input: {
     padding: '10px 12px',
-    border: '1px solid #d1d5db',
+    border: '1px solid var(--muted-3)',
     borderRadius: '8px',
     fontSize: '13px',
     outline: 'none',
@@ -665,7 +665,7 @@ const styles = {
   // Table
   tableWrapper: {
     background: 'var(--surface)',
-    border: '1px solid #e5e7eb',
+    border: '1px solid var(--border)',
     borderRadius: '12px',
     overflow: 'hidden',
   },
@@ -682,10 +682,10 @@ const styles = {
     textTransform: 'uppercase',
     letterSpacing: '0.5px',
     background: 'var(--bg)',
-    borderBottom: '1px solid #f3f4f6',
+    borderBottom: '1px solid var(--border-2)',
   },
   tr: {
-    borderBottom: '1px solid #f3f4f6',
+    borderBottom: '1px solid var(--border-2)',
   },
   td: {
     padding: '14px 16px',
@@ -743,7 +743,7 @@ const styles = {
 
   // Upload
   dropZone: {
-    border: '2px dashed #d1d5db',
+    border: '2px dashed var(--muted-3)',
     borderRadius: '12px',
     padding: '48px 24px',
     textAlign: 'center',
@@ -770,7 +770,7 @@ const styles = {
   fileBtn: {
     padding: '10px 24px',
     background: 'var(--surface)',
-    border: '1px solid #d1d5db',
+    border: '1px solid var(--muted-3)',
     borderRadius: '8px',
     fontSize: '13px',
     fontWeight: '500',
@@ -787,7 +787,7 @@ const styles = {
   },
   clientsUserList: {
     background: 'var(--surface)',
-    border: '1px solid #e5e7eb',
+    border: '1px solid var(--border)',
     borderRadius: '12px',
     padding: '20px',
   },
@@ -797,7 +797,7 @@ const styles = {
     gap: '2px',
     width: '100%',
     padding: '12px 14px',
-    border: '1px solid #e5e7eb',
+    border: '1px solid var(--border)',
     borderRadius: '8px',
     background: 'var(--surface)',
     cursor: 'pointer',
@@ -817,7 +817,7 @@ const styles = {
   },
   clientsAssignment: {
     background: 'var(--surface)',
-    border: '1px solid #e5e7eb',
+    border: '1px solid var(--border)',
     borderRadius: '12px',
     padding: '20px',
   },

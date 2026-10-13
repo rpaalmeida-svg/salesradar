@@ -80,7 +80,7 @@ export default function OdooStatus() {
 }
 
 const s = {
-  box: { margin: '6px 10px 10px', padding: '10px 12px', border: '1px solid #e5e7eb', borderRadius: '10px', background: 'var(--surface-2)', fontSize: '12px', color: 'var(--ink-2)' },
+  box: { margin: '6px 10px 10px', padding: '10px 12px', border: '1px solid var(--border)', borderRadius: '10px', background: 'var(--surface-2)', fontSize: '12px', color: 'var(--ink-2)' },
   row: { display: 'flex', alignItems: 'center', gap: '6px' },
   dot: { width: '8px', height: '8px', borderRadius: '50%', flexShrink: 0 },
   title: { fontWeight: 700, color: 'var(--ink)' },
@@ -88,9 +88,9 @@ const s = {
   msg: { marginTop: '5px', color: 'var(--muted)', lineHeight: 1.35, maxHeight: '48px', overflow: 'hidden' },
   sub: { marginTop: '2px', color: 'var(--muted-2)', fontSize: '11px' },
   link: { display: 'block', marginTop: '6px', color: 'var(--warn)', fontWeight: 600, textDecoration: 'none' },
-  card: { marginTop: '8px', padding: '8px 10px', background: 'var(--surface)', border: '1px solid #e5e7eb', borderRadius: '8px' },
+  card: { marginTop: '8px', padding: '8px 10px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '8px' },
   cardTitle: { fontWeight: 600, color: 'var(--ink)' },
   cardAgo: { marginLeft: 'auto', color: 'var(--ink-2)', fontVariantNumeric: 'tabular-nums' },
-  btn: { marginTop: '7px', width: '100%', padding: '6px', border: '1px solid #667eea', background: 'var(--accent)', color: '#fff', borderRadius: '7px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' },
+  btn: { marginTop: '7px', width: '100%', padding: '6px', border: '1px solid var(--accent)', background: 'var(--accent)', color: '#fff', borderRadius: '7px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' },
   foot: { marginTop: '6px', color: 'var(--muted-2)', fontSize: '10px', textAlign: 'center' },
 };

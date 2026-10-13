@@ -452,7 +452,7 @@ const styles = {
     background: 'var(--surface)',
     borderRadius: '10px',
     padding: '16px',
-    border: '1px solid #e5e7eb',
+    border: '1px solid var(--border)',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
@@ -475,7 +475,7 @@ const styles = {
   searchInput: {
     width: '100%',
     padding: '10px 14px',
-    border: '1px solid #e5e7eb',
+    border: '1px solid var(--border)',
     borderRadius: '8px',
     fontSize: '13px',
     outline: 'none',
@@ -490,7 +490,7 @@ const styles = {
   },
   strategyCard: {
     background: 'var(--surface)',
-    border: '1px solid #e5e7eb',
+    border: '1px solid var(--border)',
     borderRadius: '10px',
     padding: '20px',
   },
@@ -560,7 +560,7 @@ const styles = {
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingTop: '10px',
-    borderTop: '1px solid #f3f4f6',
+    borderTop: '1px solid var(--border-2)',
     flexWrap: 'wrap',
     gap: '8px',
   },
@@ -642,7 +642,7 @@ const styles = {
   },
   input: {
     padding: '10px 12px',
-    border: '1px solid #e5e7eb',
+    border: '1px solid var(--border)',
     borderRadius: '8px',
     fontSize: '13px',
     outline: 'none',
@@ -650,7 +650,7 @@ const styles = {
   },
   select: {
     padding: '10px 12px',
-    border: '1px solid #e5e7eb',
+    border: '1px solid var(--border)',
     borderRadius: '8px',
     fontSize: '13px',
     outline: 'none',
@@ -660,7 +660,7 @@ const styles = {
   },
   textarea: {
     padding: '10px 12px',
-    border: '1px solid #e5e7eb',
+    border: '1px solid var(--border)',
     borderRadius: '8px',
     fontSize: '13px',
     outline: 'none',
@@ -676,7 +676,7 @@ const styles = {
   addCompBtn: {
     padding: '4px 12px',
     background: 'none',
-    border: '1px solid #e5e7eb',
+    border: '1px solid var(--border)',
     borderRadius: '6px',
     fontSize: '11px',
     fontWeight: '600',
@@ -699,7 +699,7 @@ const styles = {
   },
   cancelBtn: {
     padding: '10px 20px',
-    border: '1px solid #e5e7eb',
+    border: '1px solid var(--border)',
     borderRadius: '8px',
     fontSize: '13px',
     background: 'var(--surface)',

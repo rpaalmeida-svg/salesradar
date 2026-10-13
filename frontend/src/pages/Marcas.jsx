@@ -256,7 +256,7 @@ const styles = {
   },
   yearSelect: {
     padding: '8px 16px',
-    border: '1px solid #e5e7eb',
+    border: '1px solid var(--border)',
     borderRadius: '8px',
     fontSize: '13px',
     fontWeight: '500',
@@ -274,7 +274,7 @@ const styles = {
   searchInput: {
     flex: 1,
     padding: '10px 14px',
-    border: '1px solid #e5e7eb',
+    border: '1px solid var(--border)',
     borderRadius: '8px',
     fontSize: '13px',
     outline: 'none',
@@ -283,7 +283,7 @@ const styles = {
   },
   sortSelect: {
     padding: '10px 14px',
-    border: '1px solid #e5e7eb',
+    border: '1px solid var(--border)',
     borderRadius: '8px',
     fontSize: '13px',
     fontFamily: 'inherit',
@@ -308,7 +308,7 @@ const styles = {
   },
   card: {
     padding: '16px',
-    border: '1px solid #e5e7eb',
+    border: '1px solid var(--border)',
     borderRadius: '10px',
     cursor: 'pointer',
     transition: 'all 0.15s',
@@ -371,13 +371,13 @@ const styles = {
   },
   weightBarFill: {
     height: '100%',
-    background: 'linear-gradient(90deg, #667eea, #764ba2)',
+    background: 'linear-gradient(90deg, var(--accent), var(--accent-2))',
     borderRadius: '2px',
     transition: 'width 0.3s',
   },
   detail: {
     background: 'var(--surface)',
-    border: '1px solid #e5e7eb',
+    border: '1px solid var(--border)',
     borderRadius: '12px',
     padding: '24px',
     position: 'sticky',
@@ -444,7 +444,7 @@ const styles = {
   detailTableHeader: {
     display: 'flex',
     padding: '8px 0',
-    borderBottom: '1px solid #f3f4f6',
+    borderBottom: '1px solid var(--border-2)',
     fontSize: '11px',
     color: 'var(--muted-2)',
     textTransform: 'uppercase',
@@ -454,7 +454,7 @@ const styles = {
   detailTableRow: {
     display: 'flex',
     padding: '10px 0',
-    borderBottom: '1px solid #f9fafb',
+    borderBottom: '1px solid var(--surface-2)',
     fontSize: '13px',
     color: 'var(--ink-2)',
   },

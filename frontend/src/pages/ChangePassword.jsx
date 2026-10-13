@@ -137,7 +137,7 @@ const styles = {
   },
   input: {
     padding: '12px 14px',
-    border: '1px solid #d1d5db',
+    border: '1px solid var(--muted-3)',
     borderRadius: '10px',
     fontSize: '14px',
     outline: 'none',

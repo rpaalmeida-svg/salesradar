@@ -106,7 +106,7 @@ const styles = {
   sidebar: {
     width: '240px',
     background: 'var(--surface)',
-    borderRight: '1px solid #e5e7eb',
+    borderRight: '1px solid var(--border)',
     display: 'flex',
     flexDirection: 'column',
     position: 'fixed',
@@ -120,7 +120,7 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     gap: '10px',
-    borderBottom: '1px solid #f3f4f6',
+    borderBottom: '1px solid var(--border-2)',
   },
   sidebarTitle: {
     fontSize: '17px',
@@ -182,7 +182,7 @@ const styles = {
   },
   sidebarFooter: {
     padding: '16px 14px',
-    borderTop: '1px solid #f3f4f6',
+    borderTop: '1px solid var(--border-2)',
   },
   userInfo: {
     marginBottom: '10px',
@@ -201,7 +201,7 @@ const styles = {
     width: '100%',
     padding: '8px',
     background: 'var(--surface-2)',
-    border: '1px solid #e5e7eb',
+    border: '1px solid var(--border)',
     borderRadius: '6px',
     fontSize: '12px',
     color: 'var(--muted)',

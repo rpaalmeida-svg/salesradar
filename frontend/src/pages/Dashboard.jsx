@@ -109,10 +109,10 @@ export default function Dashboard() {
       </div>
 
       <div style={st.kpis}>
-        <Kpi label={`Faturado ${Y}`} value={eurK(t.ytd)} sub={<><span style={{ color: t.delta_pct >= 0 ? 'var(--ok)' : 'var(--crit)', fontWeight: 600 }}>{pct(t.delta_pct)}</span> vs mesmo período de {Y - 1} ({eurK(t.ytd_prev)})</>} color="#667eea" onClick={() => navigate('/odoo/sales')} />
+        <Kpi label={`Faturado ${Y}`} value={eurK(t.ytd)} sub={<><span style={{ color: t.delta_pct >= 0 ? 'var(--ok)' : 'var(--crit)', fontWeight: 600 }}>{pct(t.delta_pct)}</span> vs mesmo período de {Y - 1} ({eurK(t.ytd_prev)})</>} color="var(--accent)" onClick={() => navigate('/odoo/sales')} />
         <Kpi label={`Objectivo ${Y}`} value={t.annual_target ? `${Math.round(pctObj)} %` : '—'} sub={t.annual_target ? <>{eurK(t.annual_target)} · <span style={{ color: gap >= 0 ? 'var(--ok)' : 'var(--crit)', fontWeight: 600 }}>{gap >= 0 ? '+' : '−'}{eurK(Math.abs(gap))}</span> face ao ritmo esperado</> : 'define o objectivo em Objectivos'} color={gap >= 0 ? 'var(--ok)' : 'var(--crit)'} onClick={() => navigate('/objectivos')} />
-        <Kpi label="Projecção de fecho" value={eurK(t.projection)} sub={<>{projPct ? `${Math.round(projPct)} % do objectivo · ` : ''}entre {eurK(t.projection_low)} e {eurK(t.projection_high)}</>} color="#f59e0b" onClick={() => navigate('/odoo/plan')} />
-        <Kpi label="Margem geral" value={pct0(t.margin_pct)} sub={<>{Y - 1} no mesmo período: {pct0(t.margin_pct_prev)} · {eurK(t.ytd - t.cost_ytd)} de margem</>} color="#764ba2" />
+        <Kpi label="Projecção de fecho" value={eurK(t.projection)} sub={<>{projPct ? `${Math.round(projPct)} % do objectivo · ` : ''}entre {eurK(t.projection_low)} e {eurK(t.projection_high)}</>} color="var(--warn)" onClick={() => navigate('/odoo/plan')} />
+        <Kpi label="Margem geral" value={pct0(t.margin_pct)} sub={<>{Y - 1} no mesmo período: {pct0(t.margin_pct_prev)} · {eurK(t.ytd - t.cost_ytd)} de margem</>} color="var(--accent-2)" />
         <Kpi label="Este mês" value={eurK(t.month)} sub={<>mês anterior {eurK(t.prev_month)} · mesmo mês {Y - 1}: {eurK(t.month_prev_year)}{t.pending ? ` · ${eurK(t.pending)} por faturar` : ''}</>} color="#06b6d4" />
         {d.stock && <Kpi label="Stock Ajax" value={<span style={{ color: d.stock.rutura ? 'var(--crit)' : 'var(--ok)' }}>{d.stock.rutura} em rutura</span>} sub={<>{d.stock.a_chegar} a chegar · {d.stock.pedido} pedidas · {d.stock.units_missing} un. em falta · {ago(d.stock.updated_at)}</>} color={d.stock.rutura ? 'var(--crit)' : 'var(--ok)'} onClick={() => navigate('/odoo/ajax')} />}
       </div>
@@ -187,21 +187,21 @@ const st = {
   title: { fontSize: '20px', fontWeight: '600', color: 'var(--ink)', margin: '0 0 4px 0', letterSpacing: '-0.3px' },
   subtitle: { fontSize: '13px', color: 'var(--muted-2)', margin: 0 },
   kpis: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(175px, 1fr))', gap: '14px', marginBottom: '20px' },
-  kpi: { background: 'var(--surface)', border: '1px solid #e5e7eb', borderLeft: '4px solid', borderRadius: '12px', padding: '14px 16px' },
+  kpi: { background: 'var(--surface)', border: '1px solid var(--border)', borderLeft: '4px solid', borderRadius: '12px', padding: '14px 16px' },
   kpiLabel: { fontSize: '11px', fontWeight: '600', color: 'var(--muted-2)', textTransform: 'uppercase', letterSpacing: '0.05em' },
   kpiValue: { fontSize: '24px', fontWeight: '700', color: 'var(--ink)', marginTop: '4px', letterSpacing: '-0.5px', fontVariantNumeric: 'tabular-nums' },
   kpiSub: { fontSize: '12px', color: 'var(--muted)', marginTop: '4px', lineHeight: 1.4 },
   grid: { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' },
-  card: { background: 'var(--surface)', border: '1px solid #e5e7eb', borderRadius: '12px', padding: '16px 18px', minWidth: 0 },
+  card: { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px', padding: '16px 18px', minWidth: 0 },
   cardHead: { display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '10px', gap: 10, flexWrap: 'wrap' },
   cardTitle: { fontSize: '15px', fontWeight: '600', color: 'var(--ink)', margin: 0 },
   cardSub: { fontSize: '12px', color: 'var(--muted-2)' },
-  legendRow: { display: 'flex', alignItems: 'center', gap: 8, padding: '4px 0', fontSize: '12px', borderBottom: '1px solid #f3f4f6' },
+  legendRow: { display: 'flex', alignItems: 'center', gap: 8, padding: '4px 0', fontSize: '12px', borderBottom: '1px solid var(--border-2)' },
   dot: { width: 9, height: 9, borderRadius: 2, flexShrink: 0 },
   legendName: { flex: 1, minWidth: 70, color: 'var(--ink-2)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' },
   legendVal: { fontWeight: 600, color: 'var(--ink)', fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap', minWidth: 54, textAlign: 'right' },
   legendDelta: { width: 52, textAlign: 'right', fontWeight: 600, fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' },
   table: { width: '100%', borderCollapse: 'collapse', fontVariantNumeric: 'tabular-nums' },
-  th: { textAlign: 'left', padding: '8px 10px', fontSize: '11px', fontWeight: '600', color: 'var(--muted-2)', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb' },
-  td: { padding: '9px 10px', fontSize: '13px', color: 'var(--ink-2)', borderBottom: '1px solid #f3f4f6' },
+  th: { textAlign: 'left', padding: '8px 10px', fontSize: '11px', fontWeight: '600', color: 'var(--muted-2)', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid var(--border)' },
+  td: { padding: '9px 10px', fontSize: '13px', color: 'var(--ink-2)', borderBottom: '1px solid var(--border-2)' },
 };
