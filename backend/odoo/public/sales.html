@@ -85,7 +85,7 @@
         <th data-k="prev_full" class="num hideM">Ano passado</th>
         <th data-k="month" class="num hideM">Este mês</th>
         <th data-k="pending" class="num hideM" title="Encomendas confirmadas por faturar">Por faturar</th>
-        <th data-k="last_sale" class="hideM">Última venda</th>
+        <th data-k="last_sale" class="hideM" title="Data da última fatura (a última encomenda pode ser mais recente)">Última fatura</th>
         <th data-k="margin_pct" class="num">Marg.</th>
       </tr></thead>
       <tbody id="clients"></tbody>
@@ -203,7 +203,7 @@ async function openClient(id) {
   box.innerHTML = '<span class="sub">a carregar…</span>';
   const d = await api('/api/sales/client/' + id);
   const c = data.clients.find((x) => x.id === id) || {};
-  box.innerHTML = `<h2>${c.name || id} <span class="sub">${eur(d.totals.ytd)} este ano · ${deltaCell(d.totals.delta_pct)} · última venda ${fmtDate(c.last_sale)}</span></h2>
+  box.innerHTML = `<h2>${c.name || id} <span class="sub">${eur(d.totals.ytd)} este ano · ${deltaCell(d.totals.delta_pct)} · última fatura ${fmtDate(c.last_sale)}${c.last_order ? ' · última encomenda ' + fmtDate(c.last_order) : ''}</span></h2>
     <div class="grid2">
       <div><div id="cChart"></div><div class="legend"><span><i style="background:var(--border)"></i>ano passado</span><span><i style="background:var(--accent)"></i>este ano</span></div></div>
       <div><table><thead><tr><th>Marca</th><th class="num">Este ano</th><th class="num">Δ</th><th class="num">Marg.</th></tr></thead><tbody id="cBrands"></tbody></table></div>

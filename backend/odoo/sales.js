@@ -48,8 +48,8 @@ function buildOverview(snapshot, today = new Date()) {
   for (const l of lines) {
     if (!l.date) continue;
     add(total, l);
-    const c = byClient.get(l.partner_id) || { ...acc(), id: l.partner_id, name: l.partner };
-    add(c, l); byClient.set(l.partner_id, c);
+    const c = byClient.get(l.partner_id) || { ...acc(), id: l.partner_id, name: l.partner, last_invoice: null };
+    add(c, l); if (l.amount > 0 && (!c.last_invoice || l.date > c.last_invoice)) c.last_invoice = l.date; byClient.set(l.partner_id, c);
     const bKey = l.brand || '(sem marca)';
     const b = byBrand.get(bKey) || { ...acc(), brand: bKey };
     add(b, l); byBrand.set(bKey, b);
@@ -60,7 +60,7 @@ function buildOverview(snapshot, today = new Date()) {
   const pInfo = new Map(partners.map((p) => [p.id, p]));
   const clients = Array.from(byClient.values()).map((c) => {
     const p = pInfo.get(c.id) || {};
-    return { ...finish(c), last_sale: p.last_sale_date || null, pending: p.pending_orders_amount || 0, user: p.user || null, city: p.city || null };
+    return { ...finish(c), last_sale: c.last_invoice || null, last_order: p.last_sale_date || null, pending: p.pending_orders_amount || 0, user: p.user || null, city: p.city || null };
   });
   // contactos/moradas da área sem faturação no período ficam de fora;
   // só entram sem linhas se tiverem encomendas pendentes
