@@ -15,6 +15,10 @@
       return r;
     });
   };
+  // tema: a mesma chave que o SalesRadar usa (mesma origem); escuro por defeito
+  const applyTheme = () => { let t = 'dark'; try { t = localStorage.getItem('salesradar_theme') || 'dark'; } catch {} document.documentElement.setAttribute('data-theme', t); };
+  applyTheme();
+  window.addEventListener('storage', (e) => { if (e.key === 'salesradar_theme') applyTheme(); });
   const embedded = window.self !== window.top;
   document.addEventListener('DOMContentLoaded', () => {
     if (!embedded) return;

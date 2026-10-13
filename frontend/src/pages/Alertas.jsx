@@ -10,7 +10,7 @@ const KINDS = {
   produto: { label: 'Produto recorrente que parou', icon: '📉', q: 'Um produto que o cliente comprava todos os meses e deixou de comprar — sinal precoce de concorrência.' },
   por_faturar: { label: 'Por faturar', icon: '🧾', q: 'Encomendas confirmadas que ainda não saíram.' },
 };
-const SEV = { critical: ['Crítico', '#dc2626', '#fef2f2', '#fecaca'], warning: ['Atenção', '#d97706', '#fffbeb', '#fde68a'], info: ['Info', '#2563eb', '#eff6ff', '#bfdbfe'] };
+const SEV = { critical: ['Crítico', 'var(--crit)', 'var(--crit-bg)', 'var(--crit-border)'], warning: ['Atenção', 'var(--warn)', 'var(--warn-bg)', 'var(--warn-border)'], info: ['Info', 'var(--info)', 'var(--info-bg)', 'var(--info-border)'] };
 const eur = (v) => new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(v || 0);
 const eurK = (v) => (Math.abs(v) >= 1e6 ? (v / 1e6).toFixed(2).replace('.', ',') + ' M€' : Math.abs(v) >= 1e3 ? Math.round(v / 1e3) + ' k€' : eur(v));
 const fmtD = (d) => (d ? new Date(d).toLocaleDateString('pt-PT') : '—');
@@ -44,8 +44,8 @@ export default function Alertas() {
           <p style={st.subtitle}>Vendas × stock × chegadas · ordenados por euros em jogo · dados do Odoo de {new Date(d.taken_at).toLocaleString('pt-PT', { dateStyle: 'short', timeStyle: 'short' })}</p>
         </div>
         <div style={st.sevRow}>
-          {[['all', `Todos (${d.total})`, '#6b7280'], ['critical', `Críticos (${counts.critical})`, SEV.critical[1]], ['warning', `Atenção (${counts.warning})`, SEV.warning[1]], ['info', `Info (${counts.info})`, SEV.info[1]]].map(([k, l, c]) => (
-            <button key={k} onClick={() => setSev(k)} style={{ ...st.chip, borderColor: sev === k ? c : '#e5e7eb', color: sev === k ? c : '#4b5563', fontWeight: sev === k ? 700 : 500 }}>{l}</button>
+          {[['all', `Todos (${d.total})`, 'var(--muted)'], ['critical', `Críticos (${counts.critical})`, SEV.critical[1]], ['warning', `Atenção (${counts.warning})`, SEV.warning[1]], ['info', `Info (${counts.info})`, SEV.info[1]]].map(([k, l, c]) => (
+            <button key={k} onClick={() => setSev(k)} style={{ ...st.chip, borderColor: sev === k ? c : 'var(--border)', color: sev === k ? c : 'var(--ink-2)', fontWeight: sev === k ? 700 : 500 }}>{l}</button>
           ))}
         </div>
       </div>
@@ -55,7 +55,7 @@ export default function Alertas() {
           const s = d.summary[k] || { count: 0, value: 0 };
           const active = kind === k;
           return (
-            <div key={k} onClick={() => setKind(active ? 'all' : k)} style={{ ...st.tile, borderColor: active ? '#667eea' : '#e5e7eb', background: active ? '#f0f4ff' : 'white', opacity: s.count ? 1 : 0.55 }}>
+            <div key={k} onClick={() => setKind(active ? 'all' : k)} style={{ ...st.tile, borderColor: active ? 'var(--accent)' : 'var(--border)', background: active ? 'var(--accent-bg)' : 'var(--surface)', opacity: s.count ? 1 : 0.55 }}>
               <div style={st.tileHead}><span>{v.icon}</span><span style={st.tileLabel}>{v.label}</span></div>
               <div style={st.tileValue}>{s.count}<span style={st.tileSub}> · {eurK(s.value)}</span></div>
               <div style={st.tileQ}>{v.q}</div>
@@ -81,7 +81,7 @@ export default function Alertas() {
               {a.clients && a.clients.length > 0 && (a.kind === 'rutura' || a.kind === 'chegada') && (
                 <div style={st.clients}>
                   {a.clients.map((c) => (
-                    <span key={c.id} style={{ ...st.client, borderColor: c.waiting ? '#fde68a' : '#e5e7eb', background: c.waiting ? '#fffbeb' : '#f9fafb' }} title={`última compra deste produto: ${fmtD(c.last)}`}>
+                    <span key={c.id} style={{ ...st.client, borderColor: c.waiting ? 'var(--warn-border)' : 'var(--border)', background: c.waiting ? 'var(--warn-bg)' : 'var(--surface-2)' }} title={`última compra deste produto: ${fmtD(c.last)}`}>
                       <b>{short(c.name)}</b> · {Math.round(c.qty || 0)} un. · {eurK(c.amount)}{c.waiting ? ' · parado' : ''}
                     </span>
                   ))}
@@ -99,30 +99,30 @@ export default function Alertas() {
 }
 
 const st = {
-  loading: { padding: '40px', color: '#6b7280', fontSize: '14px' },
+  loading: { padding: '40px', color: 'var(--muted)', fontSize: '14px' },
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '18px', gap: 16, flexWrap: 'wrap' },
-  title: { fontSize: '20px', fontWeight: '600', color: '#111827', margin: '0 0 4px 0', letterSpacing: '-0.3px' },
-  subtitle: { fontSize: '13px', color: '#9ca3af', margin: 0 },
+  title: { fontSize: '20px', fontWeight: '600', color: 'var(--ink)', margin: '0 0 4px 0', letterSpacing: '-0.3px' },
+  subtitle: { fontSize: '13px', color: 'var(--muted-2)', margin: 0 },
   sevRow: { display: 'flex', gap: 6, flexWrap: 'wrap' },
-  chip: { padding: '7px 12px', borderRadius: '999px', border: '1px solid', background: 'white', fontSize: '12px', cursor: 'pointer', fontFamily: 'inherit' },
+  chip: { padding: '7px 12px', borderRadius: '999px', border: '1px solid', background: 'var(--surface)', fontSize: '12px', cursor: 'pointer', fontFamily: 'inherit' },
   tiles: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: '12px', marginBottom: '18px' },
   tile: { border: '1px solid', borderRadius: '12px', padding: '12px 14px', cursor: 'pointer', transition: 'all .15s' },
-  tileHead: { display: 'flex', alignItems: 'center', gap: 6, fontSize: '12px', color: '#6b7280' },
-  tileLabel: { fontWeight: 600, color: '#374151' },
-  tileValue: { fontSize: '22px', fontWeight: 700, color: '#111827', marginTop: 4, letterSpacing: '-0.5px' },
-  tileSub: { fontSize: '13px', fontWeight: 500, color: '#6b7280' },
-  tileQ: { fontSize: '11px', color: '#9ca3af', marginTop: 6, lineHeight: 1.4 },
-  empty: { padding: '30px', textAlign: 'center', color: '#9ca3af', background: 'white', border: '1px dashed #e5e7eb', borderRadius: '12px' },
+  tileHead: { display: 'flex', alignItems: 'center', gap: 6, fontSize: '12px', color: 'var(--muted)' },
+  tileLabel: { fontWeight: 600, color: 'var(--ink-2)' },
+  tileValue: { fontSize: '22px', fontWeight: 700, color: 'var(--ink)', marginTop: 4, letterSpacing: '-0.5px' },
+  tileSub: { fontSize: '13px', fontWeight: 500, color: 'var(--muted)' },
+  tileQ: { fontSize: '11px', color: 'var(--muted-2)', marginTop: 6, lineHeight: 1.4 },
+  empty: { padding: '30px', textAlign: 'center', color: 'var(--muted-2)', background: 'var(--surface)', border: '1px dashed #e5e7eb', borderRadius: '12px' },
   list: { display: 'grid', gap: '10px' },
-  card: { background: 'white', border: '1px solid #e5e7eb', borderLeft: '4px solid', borderRadius: '12px', padding: '12px 16px' },
+  card: { background: 'var(--surface)', border: '1px solid #e5e7eb', borderLeft: '4px solid', borderRadius: '12px', padding: '12px 16px' },
   cardTop: { display: 'flex', alignItems: 'center', gap: 10, fontSize: '12px' },
   badge: { padding: '2px 8px', borderRadius: '999px', border: '1px solid', fontWeight: 600, fontSize: '11px' },
-  kind: { color: '#6b7280' },
-  value: { marginLeft: 'auto', fontWeight: 700, color: '#111827', fontVariantNumeric: 'tabular-nums' },
-  cardTitle: { fontSize: '15px', fontWeight: 600, color: '#111827', marginTop: 6 },
-  cardDetail: { fontSize: '13px', color: '#6b7280', marginTop: 2 },
+  kind: { color: 'var(--muted)' },
+  value: { marginLeft: 'auto', fontWeight: 700, color: 'var(--ink)', fontVariantNumeric: 'tabular-nums' },
+  cardTitle: { fontSize: '15px', fontWeight: 600, color: 'var(--ink)', marginTop: 6 },
+  cardDetail: { fontSize: '13px', color: 'var(--muted)', marginTop: 2 },
   clients: { display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 },
-  client: { fontSize: '12px', padding: '4px 9px', borderRadius: '8px', border: '1px solid', color: '#374151' },
+  client: { fontSize: '12px', padding: '4px 9px', borderRadius: '8px', border: '1px solid', color: 'var(--ink-2)' },
   actions: { marginTop: 8 },
-  linkBtn: { background: 'transparent', border: 'none', color: '#667eea', fontWeight: 600, fontSize: '12px', cursor: 'pointer', padding: 0, fontFamily: 'inherit' },
+  linkBtn: { background: 'transparent', border: 'none', color: 'var(--accent)', fontWeight: 600, fontSize: '12px', cursor: 'pointer', padding: 0, fontFamily: 'inherit' },
 };

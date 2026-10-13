@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
 import Layout from './components/Layout';
 import Login from './pages/Login';
 import ChangePassword from './pages/ChangePassword';
@@ -18,7 +19,7 @@ function ProtectedRoute({ children }) {
     return (
       <div style={{
         minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
-        background: '#fafafa', color: '#6b7280', fontSize: '14px'
+        background: 'var(--bg)', color: 'var(--muted)', fontSize: '14px'
       }}>
         A carregar...
       </div>
@@ -43,7 +44,7 @@ function AppRoutes() {
     return (
       <div style={{
         minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
-        background: '#fafafa', color: '#6b7280', fontSize: '14px'
+        background: 'var(--bg)', color: 'var(--muted)', fontSize: '14px'
       }}>
         A carregar...
       </div>
@@ -76,9 +77,11 @@ function AppRoutes() {
 export default function App() {
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <AppRoutes />
-      </AuthProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <AppRoutes />
+        </AuthProvider>
+      </ThemeProvider>
     </BrowserRouter>
   );
 }

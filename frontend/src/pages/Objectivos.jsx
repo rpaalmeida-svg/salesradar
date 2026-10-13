@@ -12,9 +12,9 @@ const eurK = (v) => (Math.abs(v) >= 1e6 ? (v / 1e6).toFixed(2).replace('.', ',')
 const pct = (v) => (v == null ? '—' : (v >= 0 ? '+' : '') + v.toFixed(1).replace('.', ',') + ' %');
 
 const STATUS = {
-  no_caminho: ['No caminho', '#059669', '#ecfdf5'],
-  em_risco: ['Em risco', '#d97706', '#fffbeb'],
-  atrasado: ['Atrasado', '#dc2626', '#fef2f2'],
+  no_caminho: ['No caminho', 'var(--ok)', 'var(--ok-bg)'],
+  em_risco: ['Em risco', 'var(--warn)', 'var(--warn-bg)'],
+  atrasado: ['Atrasado', 'var(--crit)', 'var(--crit-bg)'],
 };
 
 export default function Objectivos() {
@@ -103,7 +103,7 @@ export default function Objectivos() {
           </p>
         </div>
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-          <span style={{ fontSize: '12px', color: '#9ca3af' }}>{saving}</span>
+          <span style={{ fontSize: '12px', color: 'var(--muted-2)' }}>{saving}</span>
           <select value={year} onChange={(e) => setYear(Number(e.target.value))} style={styles.yearSelect}>
             {[Y - 1, Y, Y + 1].map((y) => <option key={y} value={y}>{y}</option>)}
           </select>
@@ -117,24 +117,24 @@ export default function Objectivos() {
       </div>
 
       <div style={styles.cards}>
-        <div style={{ ...styles.card, borderLeftColor: '#667eea' }}>
+        <div style={{ ...styles.card, borderLeftColor: 'var(--accent)' }}>
           <div style={styles.cardLabel}>Objectivo {year}</div>
           {edit
             ? <input type="number" step="50000" value={draftAnnual} onChange={(e) => setDraftAnnual(e.target.value)} style={styles.bigInput} placeholder="2000000" />
             : <div style={styles.cardValue}>{annual ? eurK(annual) : '—'}</div>}
           <div style={styles.cardSub}>{edit ? `soma por conta: ${eurK(sumDraft)}` : data.sum_client_targets ? `por conta: ${eurK(data.sum_client_targets)}${annual ? ` (${Math.round((data.sum_client_targets / annual) * 100)} % do anual)` : ''}` : 'sem objectivos por conta'}</div>
         </div>
-        <div style={{ ...styles.card, borderLeftColor: '#764ba2' }}>
+        <div style={{ ...styles.card, borderLeftColor: 'var(--accent-2)' }}>
           <div style={styles.cardLabel}>Realizado</div>
           <div style={styles.cardValue}>{eurK(t.done)}</div>
           <div style={styles.cardSub}>{annual ? `${Math.round((t.done / annual) * 100)} % do objectivo` : '—'}</div>
         </div>
-        <div style={{ ...styles.card, borderLeftColor: gapRitmo >= 0 ? '#10b981' : '#ef4444' }}>
+        <div style={{ ...styles.card, borderLeftColor: gapRitmo >= 0 ? 'var(--ok)' : 'var(--crit)' }}>
           <div style={styles.cardLabel}>Ritmo</div>
-          <div style={{ ...styles.cardValue, color: gapRitmo >= 0 ? '#059669' : '#dc2626' }}>{isCur && annual ? (gapRitmo >= 0 ? '+' : '−') + eurK(Math.abs(gapRitmo)) : '—'}</div>
+          <div style={{ ...styles.cardValue, color: gapRitmo >= 0 ? 'var(--ok)' : 'var(--crit)' }}>{isCur && annual ? (gapRitmo >= 0 ? '+' : '−') + eurK(Math.abs(gapRitmo)) : '—'}</div>
           <div style={styles.cardSub}>{isCur && annual ? `face aos ${eurK(t.expected)} esperados a esta altura (${Math.round(data.elapsed * 100)} % do ano, sazonalidade de ${year - 1})` : 'só para o ano em curso'}</div>
         </div>
-        <div style={{ ...styles.card, borderLeftColor: '#f59e0b' }}>
+        <div style={{ ...styles.card, borderLeftColor: 'var(--warn)' }}>
           <div style={styles.cardLabel}>Projecção fecho</div>
           <div style={styles.cardValue}>{t.projection ? eurK(t.projection) : '—'}</div>
           <div style={styles.cardSub}>{t.projection && annual ? `${Math.round((t.projection / annual) * 100)} % do objectivo` : ''}{isCur ? ` · ${t.no_caminho} no caminho · ${t.em_risco} em risco · ${t.atrasado} atrasadas` : ''}</div>
@@ -171,16 +171,16 @@ export default function Objectivos() {
                       : <span style={{ fontWeight: 600 }}>{c.target ? eur(c.target) : <span style={styles.muted}>—</span>}</span>}
                   </td>
                   <td style={{ ...styles.td, textAlign: 'right' }}>{eur(c.done)}</td>
-                  <td style={{ ...styles.td, textAlign: 'right', color: c.delta_pct == null ? '#9ca3af' : c.delta_pct >= 0 ? '#059669' : '#dc2626', fontWeight: 600 }}>{isCur ? pct(c.delta_pct) : '—'}</td>
+                  <td style={{ ...styles.td, textAlign: 'right', color: c.delta_pct == null ? 'var(--muted-2)' : c.delta_pct >= 0 ? 'var(--ok)' : 'var(--crit)', fontWeight: 600 }}>{isCur ? pct(c.delta_pct) : '—'}</td>
                   <td style={styles.td}>
                     {c.target > 0 && isCur ? (
                       <div style={styles.barWrap}>
-                        <div style={styles.bar}><div style={{ ...styles.barFill, width: `${p * 100}%`, background: st ? st[1] : '#667eea' }} /><div style={{ ...styles.marker, left: `${exp * 100}%` }} /></div>
+                        <div style={styles.bar}><div style={{ ...styles.barFill, width: `${p * 100}%`, background: st ? st[1] : 'var(--accent)' }} /><div style={{ ...styles.marker, left: `${exp * 100}%` }} /></div>
                         <span style={styles.barPct}>{Math.round(p * 100)} %</span>
                       </div>
                     ) : <span style={styles.muted}>—</span>}
                   </td>
-                  <td style={{ ...styles.td, textAlign: 'right' }}>{c.projection ? <span style={{ color: c.target ? (c.projection >= c.target ? '#059669' : '#dc2626') : '#374151', fontWeight: 600 }}>{eur(c.projection)}</span> : <span style={styles.muted}>—</span>}</td>
+                  <td style={{ ...styles.td, textAlign: 'right' }}>{c.projection ? <span style={{ color: c.target ? (c.projection >= c.target ? 'var(--ok)' : 'var(--crit)') : 'var(--ink-2)', fontWeight: 600 }}>{eur(c.projection)}</span> : <span style={styles.muted}>—</span>}</td>
                   <td style={styles.td}>{st ? <span style={{ ...styles.badge, color: st[1], background: st[2] }}>● {st[0]}</span> : <span style={styles.muted}>—</span>}</td>
                 </tr>
               );
@@ -200,39 +200,39 @@ export default function Objectivos() {
 }
 
 const styles = {
-  tabs: { display: 'inline-flex', gap: 4, background: '#f3f4f6', padding: 4, borderRadius: 10, marginBottom: 18 },
-  tab: { padding: '7px 16px', border: 'none', background: 'transparent', borderRadius: 7, fontSize: 13, fontWeight: 500, color: '#6b7280', cursor: 'pointer', fontFamily: 'inherit' },
-  tabOn: { background: 'white', color: '#111827', fontWeight: 600, boxShadow: '0 1px 2px rgba(0,0,0,.06)' },
-  loading: { padding: '40px', color: '#6b7280', fontSize: '14px' },
+  tabs: { display: 'inline-flex', gap: 4, background: 'var(--border-2)', padding: 4, borderRadius: 10, marginBottom: 18 },
+  tab: { padding: '7px 16px', border: 'none', background: 'transparent', borderRadius: 7, fontSize: 13, fontWeight: 500, color: 'var(--muted)', cursor: 'pointer', fontFamily: 'inherit' },
+  tabOn: { background: 'var(--surface)', color: 'var(--ink)', fontWeight: 600, boxShadow: '0 1px 2px rgba(0,0,0,.06)' },
+  loading: { padding: '40px', color: 'var(--muted)', fontSize: '14px' },
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px', gap: '16px', flexWrap: 'wrap' },
-  pageTitle: { fontSize: '20px', fontWeight: '600', color: '#111827', margin: '0 0 4px 0', letterSpacing: '-0.3px' },
-  pageSubtitle: { fontSize: '13px', color: '#9ca3af', margin: 0 },
-  yearSelect: { padding: '8px 16px', border: '1px solid #e5e7eb', borderRadius: '8px', fontSize: '13px', fontWeight: '500', color: '#374151', background: 'white', cursor: 'pointer', fontFamily: 'inherit', outline: 'none' },
-  addBtn: { padding: '10px 20px', background: 'linear-gradient(135deg, #667eea, #764ba2)', color: 'white', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'inherit' },
-  ghostBtn: { padding: '10px 14px', background: 'white', color: '#374151', border: '1px solid #e5e7eb', borderRadius: '8px', fontSize: '13px', fontWeight: '500', cursor: 'pointer', fontFamily: 'inherit' },
+  pageTitle: { fontSize: '20px', fontWeight: '600', color: 'var(--ink)', margin: '0 0 4px 0', letterSpacing: '-0.3px' },
+  pageSubtitle: { fontSize: '13px', color: 'var(--muted-2)', margin: 0 },
+  yearSelect: { padding: '8px 16px', border: '1px solid #e5e7eb', borderRadius: '8px', fontSize: '13px', fontWeight: '500', color: 'var(--ink-2)', background: 'var(--surface)', cursor: 'pointer', fontFamily: 'inherit', outline: 'none' },
+  addBtn: { padding: '10px 20px', background: 'linear-gradient(135deg, var(--accent), var(--accent-2))', color: 'white', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'inherit' },
+  ghostBtn: { padding: '10px 14px', background: 'var(--surface)', color: 'var(--ink-2)', border: '1px solid #e5e7eb', borderRadius: '8px', fontSize: '13px', fontWeight: '500', cursor: 'pointer', fontFamily: 'inherit' },
   cards: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '24px' },
-  card: { background: 'white', border: '1px solid #e5e7eb', borderLeft: '4px solid', borderRadius: '12px', padding: '18px 20px' },
-  cardLabel: { fontSize: '11px', fontWeight: '600', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em' },
-  cardValue: { fontSize: '26px', fontWeight: '700', color: '#111827', marginTop: '6px', letterSpacing: '-0.5px', fontVariantNumeric: 'tabular-nums' },
-  cardSub: { fontSize: '12px', color: '#6b7280', marginTop: '4px', lineHeight: 1.4 },
+  card: { background: 'var(--surface)', border: '1px solid #e5e7eb', borderLeft: '4px solid', borderRadius: '12px', padding: '18px 20px' },
+  cardLabel: { fontSize: '11px', fontWeight: '600', color: 'var(--muted-2)', textTransform: 'uppercase', letterSpacing: '0.05em' },
+  cardValue: { fontSize: '26px', fontWeight: '700', color: 'var(--ink)', marginTop: '6px', letterSpacing: '-0.5px', fontVariantNumeric: 'tabular-nums' },
+  cardSub: { fontSize: '12px', color: 'var(--muted)', marginTop: '4px', lineHeight: 1.4 },
   bigInput: { fontSize: '22px', fontWeight: '700', width: '100%', marginTop: '4px', padding: '4px 8px', border: '1px solid #c7d2fe', borderRadius: '8px', fontFamily: 'inherit' },
-  tableCard: { background: 'white', border: '1px solid #e5e7eb', borderRadius: '12px', overflow: 'hidden' },
+  tableCard: { background: 'var(--surface)', border: '1px solid #e5e7eb', borderRadius: '12px', overflow: 'hidden' },
   table: { width: '100%', borderCollapse: 'collapse', fontVariantNumeric: 'tabular-nums' },
-  th: { textAlign: 'left', padding: '12px 16px', fontSize: '11px', fontWeight: '600', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', background: '#f9fafb', borderBottom: '1px solid #e5e7eb' },
+  th: { textAlign: 'left', padding: '12px 16px', fontSize: '11px', fontWeight: '600', color: 'var(--muted-2)', textTransform: 'uppercase', letterSpacing: '0.05em', background: 'var(--surface-2)', borderBottom: '1px solid #e5e7eb' },
   tr: { borderBottom: '1px solid #f3f4f6' },
-  td: { padding: '12px 16px', fontSize: '13px', color: '#374151', verticalAlign: 'middle' },
-  name: { fontWeight: '600', color: '#111827' },
-  sub: { fontSize: '11px', color: '#9ca3af', marginTop: '2px' },
-  muted: { color: '#d1d5db' },
+  td: { padding: '12px 16px', fontSize: '13px', color: 'var(--ink-2)', verticalAlign: 'middle' },
+  name: { fontWeight: '600', color: 'var(--ink)' },
+  sub: { fontSize: '11px', color: 'var(--muted-2)', marginTop: '2px' },
+  muted: { color: 'var(--muted-3)' },
   input: { width: '120px', padding: '6px 8px', border: '1px solid #e5e7eb', borderRadius: '6px', fontSize: '13px', textAlign: 'right', fontFamily: 'inherit' },
   barWrap: { display: 'flex', alignItems: 'center', gap: '10px' },
-  bar: { position: 'relative', flex: 1, height: '8px', background: '#f3f4f6', borderRadius: '4px', overflow: 'visible' },
+  bar: { position: 'relative', flex: 1, height: '8px', background: 'var(--border-2)', borderRadius: '4px', overflow: 'visible' },
   barFill: { height: '100%', borderRadius: '4px' },
-  marker: { position: 'absolute', top: '-3px', width: '2px', height: '14px', background: '#111827', borderRadius: '1px' },
-  barPct: { fontSize: '12px', fontWeight: '600', color: '#374151', minWidth: '38px', textAlign: 'right' },
+  marker: { position: 'absolute', top: '-3px', width: '2px', height: '14px', background: 'var(--ink)', borderRadius: '1px' },
+  barPct: { fontSize: '12px', fontWeight: '600', color: 'var(--ink-2)', minWidth: '38px', textAlign: 'right' },
   badge: { display: 'inline-block', padding: '3px 10px', borderRadius: '999px', fontSize: '11px', fontWeight: '600' },
-  warn: { marginTop: '20px', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '12px', padding: '14px 18px' },
-  warnTitle: { fontSize: '13px', fontWeight: '600', color: '#92400e', marginBottom: '8px' },
+  warn: { marginTop: '20px', background: 'var(--warn-bg)', border: '1px solid #fde68a', borderRadius: '12px', padding: '14px 18px' },
+  warnTitle: { fontSize: '13px', fontWeight: '600', color: 'var(--warn)', marginBottom: '8px' },
   chips: { display: 'flex', flexWrap: 'wrap', gap: '6px' },
-  chip: { fontSize: '11px', background: '#fef3c7', color: '#92400e', padding: '4px 10px', borderRadius: '6px' },
+  chip: { fontSize: '11px', background: 'var(--warn-bg)', color: 'var(--warn)', padding: '4px 10px', borderRadius: '6px' },
 };

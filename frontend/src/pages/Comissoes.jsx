@@ -179,7 +179,7 @@ export default function Comissoes() {
   const gapToNext = nextTier ? parseFloat(nextTier.year_threshold) - adjustedBilling : null;
 
   if (loading && !ocrResult) {
-    return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh', color: '#9ca3af', fontSize: '14px' }}>A carregar...</div>;
+    return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh', color: 'var(--muted-2)', fontSize: '14px' }}>A carregar...</div>;
   }
 
   return (
@@ -214,8 +214,8 @@ export default function Comissoes() {
             onDragLeave={() => setDragOver(false)}
             style={{
               ...styles.dropZone,
-              borderColor: dragOver ? '#667eea' : '#d1d5db',
-              background: dragOver ? '#f0f4ff' : '#fafafa',
+              borderColor: dragOver ? 'var(--accent)' : 'var(--muted-3)',
+              background: dragOver ? 'var(--accent-bg)' : 'var(--bg)',
             }}
           >
             {ocrLoading ? (
@@ -246,7 +246,7 @@ export default function Comissoes() {
               <div style={styles.ocrHeader}>
                 <div>
                   <h3 style={styles.ocrTitle}>Escalões Extraídos ({editableTiers.length})</h3>
-                  {vendorName && <p style={{ fontSize: '12px', color: '#9ca3af', margin: '2px 0 0' }}>Vendedor: {vendorName}</p>}
+                  {vendorName && <p style={{ fontSize: '12px', color: 'var(--muted-2)', margin: '2px 0 0' }}>Vendedor: {vendorName}</p>}
                 </div>
                 <button onClick={handleConfirmTiers} style={styles.confirmBtn}>✓ Confirmar e Gravar</button>
               </div>
@@ -266,16 +266,16 @@ export default function Comissoes() {
                   return (
                     <div key={i} style={{
                       ...styles.ocrRow,
-                      background: isTarget ? '#f0fdf4' : isMax ? '#fef2f2' : 'white',
+                      background: isTarget ? 'var(--ok-bg)' : isMax ? 'var(--crit-bg)' : 'var(--surface)',
                       borderLeft: isTarget ? '3px solid #16a34a' : isMax ? '3px solid #dc2626' : '3px solid transparent',
                     }}>
-                      <span style={{ ...styles.ocrCol, fontWeight: '600', color: '#9ca3af' }}>{tierNum}</span>
+                      <span style={{ ...styles.ocrCol, fontWeight: '600', color: 'var(--muted-2)' }}>{tierNum}</span>
                       <input type="number" step="0.01" value={t.semester} onChange={e => updateTier(i, 'semester', e.target.value)} style={styles.ocrInput} />
                       <input type="number" step="0.01" value={t.year} onChange={e => updateTier(i, 'year', e.target.value)} style={styles.ocrInput} />
                       <input type="number" step="0.01" value={t.bonus} onChange={e => updateTier(i, 'bonus', e.target.value)} style={styles.ocrInput} />
                       <span style={{ width: '80px', textAlign: 'center' }}>
-                        {isTarget && <span style={{ fontSize: '10px', fontWeight: '600', color: '#16a34a', background: '#dcfce7', padding: '2px 8px', borderRadius: '4px' }}>TARGET</span>}
-                        {isMax && <span style={{ fontSize: '10px', fontWeight: '600', color: '#dc2626', background: '#fee2e2', padding: '2px 8px', borderRadius: '4px' }}>MAX</span>}
+                        {isTarget && <span style={{ fontSize: '10px', fontWeight: '600', color: 'var(--ok)', background: 'var(--ok-bg)', padding: '2px 8px', borderRadius: '4px' }}>TARGET</span>}
+                        {isMax && <span style={{ fontSize: '10px', fontWeight: '600', color: 'var(--crit)', background: 'var(--crit-bg)', padding: '2px 8px', borderRadius: '4px' }}>MAX</span>}
                       </span>
                     </div>
                   );
@@ -316,7 +316,7 @@ export default function Comissoes() {
             </div>
             <div style={{ ...styles.kpiCard, borderLeft: '4px solid #16a34a' }}>
               <span style={styles.kpiLabel}>Comissão Actual</span>
-              <span style={{ ...styles.kpiValue, color: '#16a34a', fontSize: '26px' }}>
+              <span style={{ ...styles.kpiValue, color: 'var(--ok)', fontSize: '26px' }}>
                 {currentTier ? formatCurrency(parseFloat(currentTier.bonus)) : '—'}
               </span>
             </div>
@@ -353,17 +353,17 @@ export default function Comissoes() {
               return (
                 <div key={t.id} style={{
                   ...styles.tierRow,
-                  background: isCurrent ? '#f0fdf4' : isTarget ? '#fffff0' : isMax ? '#fff5f5' : 'white',
+                  background: isCurrent ? 'var(--ok-bg)' : isTarget ? 'var(--warn-bg)' : isMax ? 'var(--crit-bg)' : 'var(--surface)',
                   borderLeft: isCurrent ? '3px solid #16a34a' : isTarget ? '3px solid #f59e0b' : isMax ? '3px solid #dc2626' : '3px solid transparent',
                   opacity: isReached ? 1 : 0.5,
                 }}>
-                  <span style={{ ...styles.tierCol, fontWeight: '600', color: isCurrent ? '#16a34a' : '#9ca3af' }}>
+                  <span style={{ ...styles.tierCol, fontWeight: '600', color: isCurrent ? 'var(--ok)' : 'var(--muted-2)' }}>
                     {tierNum}
                     {isCurrent && ' ◀'}
                   </span>
                   <span style={{ flex: 1, fontSize: '12px' }}>{formatCurrency(parseFloat(t.semester_threshold))}</span>
                   <span style={{ flex: 1, fontSize: '12px', fontWeight: isCurrent ? '700' : '400' }}>{formatCurrency(yearThreshold)}</span>
-                  <span style={{ flex: 1, fontSize: '12px', fontWeight: isCurrent ? '700' : '400', color: isCurrent ? '#16a34a' : '#374151' }}>
+                  <span style={{ flex: 1, fontSize: '12px', fontWeight: isCurrent ? '700' : '400', color: isCurrent ? 'var(--ok)' : 'var(--ink-2)' }}>
                     {formatCurrency(parseFloat(t.bonus))}
                   </span>
                 </div>
@@ -393,13 +393,13 @@ const styles = {
   pageTitle: {
     fontSize: '20px',
     fontWeight: '600',
-    color: '#111827',
+    color: 'var(--ink)',
     margin: '0 0 4px 0',
     letterSpacing: '-0.3px',
   },
   pageSubtitle: {
     fontSize: '13px',
-    color: '#9ca3af',
+    color: 'var(--muted-2)',
     margin: 0,
   },
   yearSelect: {
@@ -408,8 +408,8 @@ const styles = {
     borderRadius: '8px',
     fontSize: '13px',
     fontWeight: '500',
-    color: '#374151',
-    background: 'white',
+    color: 'var(--ink-2)',
+    background: 'var(--surface)',
     cursor: 'pointer',
     fontFamily: 'inherit',
     outline: 'none',
@@ -431,18 +431,18 @@ const styles = {
   },
   dropText: {
     fontSize: '13px',
-    color: '#6b7280',
+    color: 'var(--muted)',
     margin: 0,
   },
   browseBtn: {
     fontSize: '12px',
-    color: '#667eea',
+    color: 'var(--accent)',
     fontWeight: '600',
     cursor: 'pointer',
   },
   // OCR Results
   ocrCard: {
-    background: 'white',
+    background: 'var(--surface)',
     border: '1px solid #e5e7eb',
     borderRadius: '12px',
     marginTop: '16px',
@@ -458,7 +458,7 @@ const styles = {
   ocrTitle: {
     fontSize: '14px',
     fontWeight: '600',
-    color: '#111827',
+    color: 'var(--ink)',
     margin: 0,
   },
   confirmBtn: {
@@ -475,9 +475,9 @@ const styles = {
   ocrTableHeader: {
     display: 'flex',
     padding: '10px 20px',
-    background: '#f9fafb',
+    background: 'var(--surface-2)',
     fontSize: '11px',
-    color: '#9ca3af',
+    color: 'var(--muted-2)',
     textTransform: 'uppercase',
     letterSpacing: '0.3px',
     fontWeight: '600',
@@ -513,7 +513,7 @@ const styles = {
     marginBottom: '16px',
   },
   kpiCard: {
-    background: 'white',
+    background: 'var(--surface)',
     borderRadius: '10px',
     padding: '16px 20px',
     border: '1px solid #e5e7eb',
@@ -523,14 +523,14 @@ const styles = {
   },
   kpiLabel: {
     fontSize: '11px',
-    color: '#9ca3af',
+    color: 'var(--muted-2)',
     textTransform: 'uppercase',
     letterSpacing: '0.3px',
   },
   kpiValue: {
     fontSize: '20px',
     fontWeight: '700',
-    color: '#111827',
+    color: 'var(--ink)',
   },
   discountRow: {
     display: 'flex',
@@ -539,12 +539,12 @@ const styles = {
   },
   slider: {
     flex: 1,
-    accentColor: '#667eea',
+    accentColor: 'var(--accent)',
   },
   discountValue: {
     fontSize: '16px',
     fontWeight: '700',
-    color: '#667eea',
+    color: 'var(--accent)',
     minWidth: '50px',
     textAlign: 'right',
   },
@@ -554,18 +554,18 @@ const styles = {
     alignItems: 'center',
     gap: '10px',
     padding: '14px 20px',
-    background: '#eff6ff',
+    background: 'var(--info-bg)',
     border: '1px solid #bfdbfe',
     borderRadius: '10px',
     marginBottom: '16px',
   },
   gapText: {
     fontSize: '13px',
-    color: '#1e40af',
+    color: 'var(--info)',
   },
   // Tiers table
   tiersCard: {
-    background: 'white',
+    background: 'var(--surface)',
     border: '1px solid #e5e7eb',
     borderRadius: '12px',
     overflow: 'hidden',
@@ -573,7 +573,7 @@ const styles = {
   tiersTitle: {
     fontSize: '14px',
     fontWeight: '600',
-    color: '#111827',
+    color: 'var(--ink)',
     margin: 0,
     padding: '16px 20px',
     borderBottom: '1px solid #f3f4f6',
@@ -581,9 +581,9 @@ const styles = {
   tiersHeader: {
     display: 'flex',
     padding: '10px 20px',
-    background: '#f9fafb',
+    background: 'var(--surface-2)',
     fontSize: '11px',
-    color: '#9ca3af',
+    color: 'var(--muted-2)',
     textTransform: 'uppercase',
     letterSpacing: '0.3px',
     fontWeight: '600',
@@ -613,7 +613,7 @@ const styles = {
   },
   emptyText: {
     fontSize: '13px',
-    color: '#9ca3af',
+    color: 'var(--muted-2)',
     textAlign: 'center',
     maxWidth: '400px',
   },

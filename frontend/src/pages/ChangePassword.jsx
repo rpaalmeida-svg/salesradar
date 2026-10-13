@@ -88,11 +88,11 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    background: 'linear-gradient(135deg, var(--accent), var(--accent-2))',
     fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
   },
   card: {
-    background: 'white',
+    background: 'var(--surface)',
     borderRadius: '16px',
     padding: '48px 40px',
     width: '100%',
@@ -111,12 +111,12 @@ const styles = {
   title: {
     fontSize: '20px',
     fontWeight: '700',
-    color: '#111827',
+    color: 'var(--ink)',
     margin: '0 0 8px 0',
   },
   subtitle: {
     fontSize: '13px',
-    color: '#6b7280',
+    color: 'var(--muted)',
     margin: 0,
     lineHeight: '1.5',
   },
@@ -133,7 +133,7 @@ const styles = {
   label: {
     fontSize: '13px',
     fontWeight: '500',
-    color: '#374151',
+    color: 'var(--ink-2)',
   },
   input: {
     padding: '12px 14px',
@@ -145,7 +145,7 @@ const styles = {
   },
   button: {
     padding: '14px',
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    background: 'linear-gradient(135deg, var(--accent), var(--accent-2))',
     color: 'white',
     border: 'none',
     borderRadius: '10px',
@@ -156,8 +156,8 @@ const styles = {
     fontFamily: 'inherit',
   },
   error: {
-    background: '#fef2f2',
-    color: '#dc2626',
+    background: 'var(--crit-bg)',
+    color: 'var(--crit)',
     padding: '12px',
     borderRadius: '8px',
     fontSize: '13px',

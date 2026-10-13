@@ -46,22 +46,22 @@ export default function OdooStatus() {
   };
 
   if (!ext?.seen_at) return (
-    <div style={s.box}><div style={s.row}><span style={{ ...s.dot, background: '#9ca3af' }} /><span style={s.title}>Odoo</span><span style={{ ...s.state, color: '#9ca3af' }}>extensão ainda não ligou</span></div>
+    <div style={s.box}><div style={s.row}><span style={{ ...s.dot, background: 'var(--muted-2)' }} /><span style={s.title}>Odoo</span><span style={{ ...s.state, color: 'var(--muted-2)' }}>extensão ainda não ligou</span></div>
       <div style={s.msg}>Abre o Chrome com a extensão "Ajax Stock Push" configurada; ela liga-se sozinha.</div></div>
   );
 
   const head = !alive
-    ? ['Chrome com a extensão parece fechado', '#d97706']
-    : loggedOut ? ['Sem sessão no Odoo', '#d97706'] : st.state === 'error' ? ['Erro na última leitura', '#dc2626'] : ['Ligado', '#059669'];
+    ? ['Chrome com a extensão parece fechado', 'var(--warn)']
+    : loggedOut ? ['Sem sessão no Odoo', 'var(--warn)'] : st.state === 'error' ? ['Erro na última leitura', 'var(--crit)'] : ['Ligado', 'var(--ok)'];
 
   const Card = ({ title, what, isBusy, last, lastSub, message }) => {
     const waiting = isBusy || pend.includes(what) || queued[what];
     return (
       <div style={s.card}>
-        <div style={s.row}><span style={{ ...s.dot, background: isBusy ? '#2563eb' : '#059669' }} /><span style={s.cardTitle}>{title}</span><span style={s.cardAgo}>{ago(last)}</span></div>
+        <div style={s.row}><span style={{ ...s.dot, background: isBusy ? 'var(--info)' : 'var(--ok)' }} /><span style={s.cardTitle}>{title}</span><span style={s.cardAgo}>{ago(last)}</span></div>
         {lastSub && <div style={s.sub}>{lastSub}</div>}
         {waiting && <div style={s.msg}>{isBusy ? (message || 'a ler o Odoo…') : 'pedido registado — arranca em menos de 1 min'}</div>}
-        {!waiting && st.state === 'error' && message && <div style={{ ...s.msg, color: '#b91c1c' }}>{message}</div>}
+        {!waiting && st.state === 'error' && message && <div style={{ ...s.msg, color: 'var(--crit)' }}>{message}</div>}
         <button onClick={() => push(what)} disabled={waiting} style={{ ...s.btn, opacity: waiting ? 0.55 : 1 }}>{waiting ? 'A atualizar…' : '↻ Atualizar'}</button>
       </div>
     );
@@ -80,17 +80,17 @@ export default function OdooStatus() {
 }
 
 const s = {
-  box: { margin: '6px 10px 10px', padding: '10px 12px', border: '1px solid #e5e7eb', borderRadius: '10px', background: '#f9fafb', fontSize: '12px', color: '#4b5563' },
+  box: { margin: '6px 10px 10px', padding: '10px 12px', border: '1px solid #e5e7eb', borderRadius: '10px', background: 'var(--surface-2)', fontSize: '12px', color: 'var(--ink-2)' },
   row: { display: 'flex', alignItems: 'center', gap: '6px' },
   dot: { width: '8px', height: '8px', borderRadius: '50%', flexShrink: 0 },
-  title: { fontWeight: 700, color: '#111827' },
+  title: { fontWeight: 700, color: 'var(--ink)' },
   state: { marginLeft: 'auto', fontWeight: 600, fontSize: '11px', textAlign: 'right' },
-  msg: { marginTop: '5px', color: '#6b7280', lineHeight: 1.35, maxHeight: '48px', overflow: 'hidden' },
-  sub: { marginTop: '2px', color: '#9ca3af', fontSize: '11px' },
-  link: { display: 'block', marginTop: '6px', color: '#b45309', fontWeight: 600, textDecoration: 'none' },
-  card: { marginTop: '8px', padding: '8px 10px', background: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px' },
-  cardTitle: { fontWeight: 600, color: '#111827' },
-  cardAgo: { marginLeft: 'auto', color: '#374151', fontVariantNumeric: 'tabular-nums' },
-  btn: { marginTop: '7px', width: '100%', padding: '6px', border: '1px solid #667eea', background: '#667eea', color: '#fff', borderRadius: '7px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' },
-  foot: { marginTop: '6px', color: '#9ca3af', fontSize: '10px', textAlign: 'center' },
+  msg: { marginTop: '5px', color: 'var(--muted)', lineHeight: 1.35, maxHeight: '48px', overflow: 'hidden' },
+  sub: { marginTop: '2px', color: 'var(--muted-2)', fontSize: '11px' },
+  link: { display: 'block', marginTop: '6px', color: 'var(--warn)', fontWeight: 600, textDecoration: 'none' },
+  card: { marginTop: '8px', padding: '8px 10px', background: 'var(--surface)', border: '1px solid #e5e7eb', borderRadius: '8px' },
+  cardTitle: { fontWeight: 600, color: 'var(--ink)' },
+  cardAgo: { marginLeft: 'auto', color: 'var(--ink-2)', fontVariantNumeric: 'tabular-nums' },
+  btn: { marginTop: '7px', width: '100%', padding: '6px', border: '1px solid #667eea', background: 'var(--accent)', color: '#fff', borderRadius: '7px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' },
+  foot: { marginTop: '6px', color: 'var(--muted-2)', fontSize: '10px', textAlign: 'center' },
 };

@@ -130,14 +130,14 @@ export default function Estrategia() {
   };
 
   const statusConfig = {
-    pendente: { label: 'Pendente', color: '#f59e0b', bg: '#fffbeb' },
-    em_curso: { label: 'Em Curso', color: '#3b82f6', bg: '#eff6ff' },
-    concluido: { label: 'Concluído', color: '#16a34a', bg: '#f0fdf4' },
-    cancelado: { label: 'Cancelado', color: '#9ca3af', bg: '#f9fafb' },
+    pendente: { label: 'Pendente', color: 'var(--warn)', bg: 'var(--warn-bg)' },
+    em_curso: { label: 'Em Curso', color: 'var(--info)', bg: 'var(--info-bg)' },
+    concluido: { label: 'Concluído', color: 'var(--ok)', bg: 'var(--ok-bg)' },
+    cancelado: { label: 'Cancelado', color: 'var(--muted-2)', bg: 'var(--surface-2)' },
   };
 
   const strengthLabels = { fraco: 'Fraco', medio: 'Médio', forte: 'Forte', dominante: 'Dominante' };
-  const strengthColors = { fraco: '#16a34a', medio: '#f59e0b', forte: '#ef4444', dominante: '#991b1b' };
+  const strengthColors = { fraco: 'var(--ok)', medio: 'var(--warn)', forte: 'var(--crit)', dominante: 'var(--crit)' };
 
   const filtered = strategies
     .filter(s => filterStatus === 'all' || s.status === filterStatus)
@@ -145,7 +145,7 @@ export default function Estrategia() {
                  (s.objective || '').toLowerCase().includes(searchTerm.toLowerCase()));
 
   if (loading) {
-    return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh', color: '#9ca3af', fontSize: '14px' }}>A carregar...</div>;
+    return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh', color: 'var(--muted-2)', fontSize: '14px' }}>A carregar...</div>;
   }
 
   const counts = {
@@ -196,7 +196,7 @@ export default function Estrategia() {
             onClick={() => setFilterStatus(s.key)}
             style={{
               ...styles.summaryCard,
-              borderColor: filterStatus === s.key ? '#667eea' : '#e5e7eb',
+              borderColor: filterStatus === s.key ? 'var(--accent)' : 'var(--border)',
               cursor: 'pointer',
             }}
           >
@@ -381,7 +381,7 @@ export default function Estrategia() {
                       <span key={i} style={styles.footerTag}>
                         ⚔️ {c.name}
                         {c.strength && (
-                          <span style={{ color: strengthColors[c.strength] || '#6b7280', fontWeight: '600', marginLeft: '4px' }}>
+                          <span style={{ color: strengthColors[c.strength] || 'var(--muted)', fontWeight: '600', marginLeft: '4px' }}>
                             ({strengthLabels[c.strength] || c.strength})
                           </span>
                         )}
@@ -389,12 +389,12 @@ export default function Estrategia() {
                     ))}
                     {/* Indicadores de contactos */}
                     {contactCount > 0 && (
-                      <span style={{ ...styles.footerTag, background: '#eff6ff', color: '#3b82f6' }}>
+                      <span style={{ ...styles.footerTag, background: 'var(--info-bg)', color: 'var(--info)' }}>
                         👥 {contactCount - placeholderCount}/{contactCount} identificados
                       </span>
                     )}
                     {pendingActions > 0 && (
-                      <span style={{ ...styles.footerTag, background: '#fffbeb', color: '#f59e0b' }}>
+                      <span style={{ ...styles.footerTag, background: 'var(--warn-bg)', color: 'var(--warn)' }}>
                         🎯 {pendingActions} acções pendentes
                       </span>
                     )}
@@ -422,18 +422,18 @@ const styles = {
   pageTitle: {
     fontSize: '20px',
     fontWeight: '600',
-    color: '#111827',
+    color: 'var(--ink)',
     margin: '0 0 4px 0',
     letterSpacing: '-0.3px',
   },
   pageSubtitle: {
     fontSize: '13px',
-    color: '#9ca3af',
+    color: 'var(--muted-2)',
     margin: 0,
   },
   addBtn: {
     padding: '10px 20px',
-    background: 'linear-gradient(135deg, #667eea, #764ba2)',
+    background: 'linear-gradient(135deg, var(--accent), var(--accent-2))',
     color: 'white',
     border: 'none',
     borderRadius: '8px',
@@ -449,7 +449,7 @@ const styles = {
     marginBottom: '20px',
   },
   summaryCard: {
-    background: 'white',
+    background: 'var(--surface)',
     borderRadius: '10px',
     padding: '16px',
     border: '1px solid #e5e7eb',
@@ -462,11 +462,11 @@ const styles = {
   summaryValue: {
     fontSize: '24px',
     fontWeight: '700',
-    color: '#111827',
+    color: 'var(--ink)',
   },
   summaryLabel: {
     fontSize: '11px',
-    color: '#9ca3af',
+    color: 'var(--muted-2)',
     textTransform: 'uppercase',
   },
   filters: {
@@ -480,7 +480,7 @@ const styles = {
     fontSize: '13px',
     outline: 'none',
     fontFamily: 'inherit',
-    background: 'white',
+    background: 'var(--surface)',
     boxSizing: 'border-box',
   },
   strategyList: {
@@ -489,7 +489,7 @@ const styles = {
     gap: '12px',
   },
   strategyCard: {
-    background: 'white',
+    background: 'var(--surface)',
     border: '1px solid #e5e7eb',
     borderRadius: '10px',
     padding: '20px',
@@ -517,7 +517,7 @@ const styles = {
   strategyClient: {
     fontSize: '15px',
     fontWeight: '600',
-    color: '#111827',
+    color: 'var(--ink)',
     margin: 0,
   },
   strategyActions: {
@@ -534,7 +534,7 @@ const styles = {
   },
   strategyObjective: {
     fontSize: '13px',
-    color: '#374151',
+    color: 'var(--ink-2)',
     margin: '0 0 12px 0',
     lineHeight: '1.5',
   },
@@ -544,13 +544,13 @@ const styles = {
   sectionLabel: {
     fontSize: '11px',
     fontWeight: '600',
-    color: '#9ca3af',
+    color: 'var(--muted-2)',
     textTransform: 'uppercase',
     letterSpacing: '0.3px',
   },
   sectionText: {
     fontSize: '13px',
-    color: '#4b5563',
+    color: 'var(--ink-2)',
     margin: '4px 0 0 0',
     lineHeight: '1.5',
     whiteSpace: 'pre-line',
@@ -571,14 +571,14 @@ const styles = {
   },
   footerTag: {
     fontSize: '11px',
-    color: '#6b7280',
-    background: '#f3f4f6',
+    color: 'var(--muted)',
+    background: 'var(--border-2)',
     padding: '3px 10px',
     borderRadius: '4px',
   },
   footerDate: {
     fontSize: '11px',
-    color: '#9ca3af',
+    color: 'var(--muted-2)',
   },
   // Modal
   overlay: {
@@ -595,7 +595,7 @@ const styles = {
     backdropFilter: 'blur(4px)',
   },
   modal: {
-    background: 'white',
+    background: 'var(--surface)',
     borderRadius: '16px',
     padding: '28px',
     width: '600px',
@@ -612,14 +612,14 @@ const styles = {
   modalTitle: {
     fontSize: '18px',
     fontWeight: '600',
-    color: '#111827',
+    color: 'var(--ink)',
     margin: 0,
   },
   closeBtn: {
     background: 'none',
     border: 'none',
     fontSize: '18px',
-    color: '#9ca3af',
+    color: 'var(--muted-2)',
     cursor: 'pointer',
   },
   formGrid: {
@@ -636,7 +636,7 @@ const styles = {
   label: {
     fontSize: '12px',
     fontWeight: '600',
-    color: '#374151',
+    color: 'var(--ink-2)',
     textTransform: 'uppercase',
     letterSpacing: '0.3px',
   },
@@ -655,7 +655,7 @@ const styles = {
     fontSize: '13px',
     outline: 'none',
     fontFamily: 'inherit',
-    background: 'white',
+    background: 'var(--surface)',
     cursor: 'pointer',
   },
   textarea: {
@@ -680,7 +680,7 @@ const styles = {
     borderRadius: '6px',
     fontSize: '11px',
     fontWeight: '600',
-    color: '#667eea',
+    color: 'var(--accent)',
     cursor: 'pointer',
     fontFamily: 'inherit',
   },
@@ -688,7 +688,7 @@ const styles = {
     background: 'none',
     border: 'none',
     fontSize: '14px',
-    color: '#9ca3af',
+    color: 'var(--muted-2)',
     cursor: 'pointer',
     padding: '4px',
   },
@@ -702,14 +702,14 @@ const styles = {
     border: '1px solid #e5e7eb',
     borderRadius: '8px',
     fontSize: '13px',
-    background: 'white',
-    color: '#374151',
+    background: 'var(--surface)',
+    color: 'var(--ink-2)',
     cursor: 'pointer',
     fontFamily: 'inherit',
   },
   saveBtn: {
     padding: '10px 20px',
-    background: 'linear-gradient(135deg, #667eea, #764ba2)',
+    background: 'linear-gradient(135deg, var(--accent), var(--accent-2))',
     color: 'white',
     border: 'none',
     borderRadius: '8px',
@@ -728,6 +728,6 @@ const styles = {
   },
   emptyText: {
     fontSize: '13px',
-    color: '#9ca3af',
+    color: 'var(--muted-2)',
   },
 };

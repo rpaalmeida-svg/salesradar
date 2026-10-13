@@ -30,7 +30,7 @@ export default function Insights() {
   };
 
   if (loading || !data) {
-    return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh', color: '#9ca3af', fontSize: '14px' }}>A analisar dados...</div>;
+    return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh', color: 'var(--muted-2)', fontSize: '14px' }}>A analisar dados...</div>;
   }
 
   const categories = [...new Set(data.insights.map(i => i.category))];
@@ -42,9 +42,9 @@ export default function Insights() {
   });
 
   const severityColors = {
-    critical: { bg: '#fef2f2', border: '#fecaca', text: '#991b1b', badge: '#dc2626' },
-    warning: { bg: '#fffbeb', border: '#fde68a', text: '#92400e', badge: '#f59e0b' },
-    success: { bg: '#f0fdf4', border: '#bbf7d0', text: '#166534', badge: '#16a34a' },
+    critical: { bg: 'var(--crit-bg)', border: 'var(--crit-border)', text: 'var(--crit)', badge: 'var(--crit)' },
+    warning: { bg: 'var(--warn-bg)', border: 'var(--warn-border)', text: 'var(--warn)', badge: 'var(--warn)' },
+    success: { bg: 'var(--ok-bg)', border: 'var(--ok-border)', text: 'var(--ok)', badge: 'var(--ok)' },
   };
 
   return (
@@ -93,9 +93,9 @@ export default function Insights() {
               onClick={() => setFilterSeverity(f.value)}
               style={{
                 ...styles.filterBtn,
-                background: filterSeverity === f.value ? '#667eea' : 'white',
-                color: filterSeverity === f.value ? 'white' : '#374151',
-                borderColor: filterSeverity === f.value ? '#667eea' : '#e5e7eb',
+                background: filterSeverity === f.value ? 'var(--accent)' : 'var(--surface)',
+                color: filterSeverity === f.value ? 'white' : 'var(--ink-2)',
+                borderColor: filterSeverity === f.value ? 'var(--accent)' : 'var(--border)',
               }}
             >
               {f.label}
@@ -151,13 +151,13 @@ const styles = {
   pageTitle: {
     fontSize: '20px',
     fontWeight: '600',
-    color: '#111827',
+    color: 'var(--ink)',
     margin: '0 0 4px 0',
     letterSpacing: '-0.3px',
   },
   pageSubtitle: {
     fontSize: '13px',
-    color: '#9ca3af',
+    color: 'var(--muted-2)',
     margin: 0,
   },
   yearSelect: {
@@ -166,8 +166,8 @@ const styles = {
     borderRadius: '8px',
     fontSize: '13px',
     fontWeight: '500',
-    color: '#374151',
-    background: 'white',
+    color: 'var(--ink-2)',
+    background: 'var(--surface)',
     cursor: 'pointer',
     fontFamily: 'inherit',
     outline: 'none',
@@ -179,7 +179,7 @@ const styles = {
     marginBottom: '24px',
   },
   summaryCard: {
-    background: 'white',
+    background: 'var(--surface)',
     borderRadius: '10px',
     padding: '16px 20px',
     border: '1px solid #e5e7eb',
@@ -190,11 +190,11 @@ const styles = {
   summaryValue: {
     fontSize: '28px',
     fontWeight: '700',
-    color: '#111827',
+    color: 'var(--ink)',
   },
   summaryLabel: {
     fontSize: '12px',
-    color: '#9ca3af',
+    color: 'var(--muted-2)',
     textTransform: 'uppercase',
     letterSpacing: '0.3px',
   },
@@ -225,8 +225,8 @@ const styles = {
     borderRadius: '8px',
     fontSize: '12px',
     fontFamily: 'inherit',
-    background: 'white',
-    color: '#374151',
+    background: 'var(--surface)',
+    color: 'var(--ink-2)',
     cursor: 'pointer',
     outline: 'none',
   },
@@ -271,7 +271,7 @@ const styles = {
   },
   insightDescription: {
     fontSize: '13px',
-    color: '#4b5563',
+    color: 'var(--ink-2)',
     margin: 0,
     lineHeight: '1.5',
   },
@@ -285,6 +285,6 @@ const styles = {
   },
   emptyText: {
     fontSize: '13px',
-    color: '#9ca3af',
+    color: 'var(--muted-2)',
   },
 };

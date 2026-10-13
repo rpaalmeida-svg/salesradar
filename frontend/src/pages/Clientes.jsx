@@ -151,7 +151,7 @@ export default function Clientes() {
   };
 
   if (loading) {
-    return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh', color: '#9ca3af', fontSize: '14px' }}>A carregar...</div>;
+    return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh', color: 'var(--muted-2)', fontSize: '14px' }}>A carregar...</div>;
   }
 
   return (
@@ -193,8 +193,8 @@ export default function Clientes() {
               onClick={() => setSelectedClient(c.client)}
               style={{
                 ...styles.clientCard,
-                borderColor: selectedClient === c.client ? '#667eea' : '#e5e7eb',
-                background: selectedClient === c.client ? '#f8f9ff' : 'white',
+                borderColor: selectedClient === c.client ? 'var(--accent)' : 'var(--border)',
+                background: selectedClient === c.client ? 'var(--accent-bg)' : 'var(--surface)',
               }}
             >
               <div style={styles.clientCardHeader}>
@@ -212,11 +212,11 @@ export default function Clientes() {
                 </div>
                 <div style={styles.clientStat}>
                   {c.variation !== null ? (
-                    <span style={{ ...styles.clientStatValue, color: c.variation >= 0 ? '#16a34a' : '#dc2626' }}>
+                    <span style={{ ...styles.clientStatValue, color: c.variation >= 0 ? 'var(--ok)' : 'var(--crit)' }}>
                       {c.variation >= 0 ? '↑' : '↓'} {Math.abs(c.variation).toFixed(1)}%
                     </span>
                   ) : (
-                    <span style={{ ...styles.clientStatValue, color: '#9ca3af' }}>Novo</span>
+                    <span style={{ ...styles.clientStatValue, color: 'var(--muted-2)' }}>Novo</span>
                   )}
                   <span style={styles.clientStatLabel}>vs {prevYear}</span>
                 </div>
@@ -256,7 +256,7 @@ export default function Clientes() {
                       <span style={styles.detailKpiLabel}>Variação</span>
                       <span style={{
                         ...styles.detailKpiValue,
-                        color: c.variation !== null ? (c.variation >= 0 ? '#16a34a' : '#dc2626') : '#9ca3af'
+                        color: c.variation !== null ? (c.variation >= 0 ? 'var(--ok)' : 'var(--crit)') : 'var(--muted-2)'
                       }}>
                         {c.variation !== null ? `${c.variation >= 0 ? '+' : ''}${c.variation.toFixed(1)}%` : 'N/A'}
                       </span>
@@ -293,9 +293,9 @@ export default function Clientes() {
                         const pct = clientTotal > 0 ? (b.total / clientTotal * 100) : 0;
                         return (
                           <div key={b.brand} style={styles.detailTableRow}>
-                            <span style={{ flex: 1, fontWeight: '500', color: '#111827' }}>{b.brand}</span>
+                            <span style={{ flex: 1, fontWeight: '500', color: 'var(--ink)' }}>{b.brand}</span>
                             <span style={styles.detailTableRight}>{formatCurrency(b.total)}</span>
-                            <span style={{ ...styles.detailTableRight, color: '#9ca3af' }}>{pct.toFixed(1)}%</span>
+                            <span style={{ ...styles.detailTableRight, color: 'var(--muted-2)' }}>{pct.toFixed(1)}%</span>
                           </div>
                         );
                       });
@@ -326,13 +326,13 @@ const styles = {
   pageTitle: {
     fontSize: '20px',
     fontWeight: '600',
-    color: '#111827',
+    color: 'var(--ink)',
     margin: '0 0 4px 0',
     letterSpacing: '-0.3px',
   },
   pageSubtitle: {
     fontSize: '13px',
-    color: '#9ca3af',
+    color: 'var(--muted-2)',
     margin: 0,
   },
   yearSelect: {
@@ -341,8 +341,8 @@ const styles = {
     borderRadius: '8px',
     fontSize: '13px',
     fontWeight: '500',
-    color: '#374151',
-    background: 'white',
+    color: 'var(--ink-2)',
+    background: 'var(--surface)',
     cursor: 'pointer',
     fontFamily: 'inherit',
     outline: 'none',
@@ -360,7 +360,7 @@ const styles = {
     fontSize: '13px',
     outline: 'none',
     fontFamily: 'inherit',
-    background: 'white',
+    background: 'var(--surface)',
   },
   sortSelect: {
     padding: '10px 14px',
@@ -368,8 +368,8 @@ const styles = {
     borderRadius: '8px',
     fontSize: '13px',
     fontFamily: 'inherit',
-    background: 'white',
-    color: '#374151',
+    background: 'var(--surface)',
+    color: 'var(--ink-2)',
     cursor: 'pointer',
     outline: 'none',
   },
@@ -393,7 +393,7 @@ const styles = {
     borderRadius: '10px',
     cursor: 'pointer',
     transition: 'all 0.15s',
-    background: 'white',
+    background: 'var(--surface)',
   },
   clientCardHeader: {
     display: 'flex',
@@ -404,13 +404,13 @@ const styles = {
   clientRank: {
     fontSize: '11px',
     fontWeight: '700',
-    color: '#9ca3af',
+    color: 'var(--muted-2)',
     width: '28px',
   },
   clientName: {
     fontSize: '13px',
     fontWeight: '600',
-    color: '#111827',
+    color: 'var(--ink)',
     flex: 1,
     overflow: 'hidden',
     textOverflow: 'ellipsis',
@@ -429,17 +429,17 @@ const styles = {
   clientStatValue: {
     fontSize: '13px',
     fontWeight: '600',
-    color: '#111827',
+    color: 'var(--ink)',
   },
   clientStatLabel: {
     fontSize: '10px',
-    color: '#9ca3af',
+    color: 'var(--muted-2)',
     textTransform: 'uppercase',
     letterSpacing: '0.3px',
   },
   weightBar: {
     height: '3px',
-    background: '#f3f4f6',
+    background: 'var(--border-2)',
     borderRadius: '2px',
     overflow: 'hidden',
   },
@@ -452,7 +452,7 @@ const styles = {
 
   // Detalhe
   detail: {
-    background: 'white',
+    background: 'var(--surface)',
     border: '1px solid #e5e7eb',
     borderRadius: '12px',
     padding: '24px',
@@ -468,14 +468,14 @@ const styles = {
   detailTitle: {
     fontSize: '16px',
     fontWeight: '600',
-    color: '#111827',
+    color: 'var(--ink)',
     margin: 0,
   },
   closeBtn: {
     background: 'none',
     border: 'none',
     fontSize: '16px',
-    color: '#9ca3af',
+    color: 'var(--muted-2)',
     cursor: 'pointer',
     padding: '4px',
   },
@@ -490,19 +490,19 @@ const styles = {
     flexDirection: 'column',
     gap: '4px',
     padding: '12px',
-    background: '#f9fafb',
+    background: 'var(--surface-2)',
     borderRadius: '8px',
   },
   detailKpiLabel: {
     fontSize: '11px',
-    color: '#9ca3af',
+    color: 'var(--muted-2)',
     textTransform: 'uppercase',
     letterSpacing: '0.3px',
   },
   detailKpiValue: {
     fontSize: '16px',
     fontWeight: '700',
-    color: '#111827',
+    color: 'var(--ink)',
   },
   detailSection: {
     marginTop: '20px',
@@ -510,7 +510,7 @@ const styles = {
   detailSectionTitle: {
     fontSize: '14px',
     fontWeight: '600',
-    color: '#111827',
+    color: 'var(--ink)',
     margin: '0 0 12px 0',
   },
   detailTable: {
@@ -522,7 +522,7 @@ const styles = {
     padding: '8px 0',
     borderBottom: '1px solid #f3f4f6',
     fontSize: '11px',
-    color: '#9ca3af',
+    color: 'var(--muted-2)',
     textTransform: 'uppercase',
     letterSpacing: '0.3px',
     fontWeight: '600',
@@ -532,7 +532,7 @@ const styles = {
     padding: '10px 0',
     borderBottom: '1px solid #f9fafb',
     fontSize: '13px',
-    color: '#374151',
+    color: 'var(--ink-2)',
   },
   detailTableRight: {
     width: '100px',
@@ -550,6 +550,6 @@ const styles = {
   },
   emptyText: {
     fontSize: '13px',
-    color: '#9ca3af',
+    color: 'var(--muted-2)',
   },
 };

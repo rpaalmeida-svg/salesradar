@@ -1,6 +1,8 @@
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import OdooStatus from './OdooStatus';
+import Logo from './Logo';
+import { useTheme } from '../context/ThemeContext';
 
 const menuItems = [
   { path: '/dashboard', label: 'Dashboard', icon: '📊' },
@@ -25,6 +27,7 @@ const adminItems = [
 
 export default function Layout() {
   const { user, logout } = useAuth();
+  const { theme, toggle } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -44,7 +47,7 @@ export default function Layout() {
       {/* Sidebar */}
       <aside style={styles.sidebar}>
         <div style={styles.sidebarHeader}>
-          <span style={{ fontSize: '20px' }}>📡</span>
+          <Logo size={26} />
           <span style={styles.sidebarTitle}>SalesRadar</span>
         </div>
 
@@ -79,7 +82,10 @@ export default function Layout() {
               {user?.role === 'admin' ? 'Administrador' : 'Utilizador'}
             </div>
           </div>
-          <button onClick={logout} style={styles.logoutBtn}>Sair</button>
+          <div style={{ display: 'flex', gap: 6 }}>
+            <button onClick={toggle} style={{ ...styles.logoutBtn, width: 'auto', padding: '8px 10px' }} title={theme === 'dark' ? 'Mudar para claro' : 'Mudar para escuro'}>{theme === 'dark' ? '☀️' : '🌙'}</button>
+            <button onClick={logout} style={styles.logoutBtn}>Sair</button>
+          </div>
         </div>
       </aside>
 
@@ -99,7 +105,7 @@ const styles = {
   },
   sidebar: {
     width: '240px',
-    background: '#ffffff',
+    background: 'var(--surface)',
     borderRight: '1px solid #e5e7eb',
     display: 'flex',
     flexDirection: 'column',
@@ -119,7 +125,7 @@ const styles = {
   sidebarTitle: {
     fontSize: '17px',
     fontWeight: '700',
-    color: '#111827',
+    color: 'var(--ink)',
     letterSpacing: '-0.3px',
   },
   nav: {
@@ -135,7 +141,7 @@ const styles = {
     fontWeight: '700',
     letterSpacing: '0.08em',
     textTransform: 'uppercase',
-    color: '#9ca3af',
+    color: 'var(--muted-2)',
     padding: '14px 12px 6px',
   },
   sectionGap: { height: '10px' },
@@ -143,7 +149,7 @@ const styles = {
     flex: 1,
     marginLeft: '240px',
     padding: 0,
-    background: '#fafafa',
+    background: 'var(--bg)',
     minHeight: '100vh',
     display: 'flex',
   },
@@ -158,15 +164,15 @@ const styles = {
     cursor: 'pointer',
     fontSize: '13px',
     fontWeight: '500',
-    color: '#4b5563',
+    color: 'var(--ink-2)',
     textAlign: 'left',
     transition: 'all 0.15s',
     fontFamily: 'inherit',
     width: '100%',
   },
   navItemActive: {
-    background: '#f0f4ff',
-    color: '#667eea',
+    background: 'var(--accent-bg)',
+    color: 'var(--accent)',
     fontWeight: '600',
   },
   navIcon: {
@@ -184,21 +190,21 @@ const styles = {
   userName: {
     fontSize: '13px',
     fontWeight: '600',
-    color: '#111827',
+    color: 'var(--ink)',
   },
   userRole: {
     fontSize: '11px',
-    color: '#9ca3af',
+    color: 'var(--muted-2)',
     marginTop: '2px',
   },
   logoutBtn: {
     width: '100%',
     padding: '8px',
-    background: '#f9fafb',
+    background: 'var(--surface-2)',
     border: '1px solid #e5e7eb',
     borderRadius: '6px',
     fontSize: '12px',
-    color: '#6b7280',
+    color: 'var(--muted)',
     cursor: 'pointer',
     fontFamily: 'inherit',
   },
@@ -206,7 +212,7 @@ const styles = {
     flex: 1,
     marginLeft: '240px',
     padding: '32px',
-    background: '#fafafa',
+    background: 'var(--bg)',
     minHeight: '100vh',
   },
 };

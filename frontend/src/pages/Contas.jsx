@@ -11,9 +11,9 @@ const eur = (v) => new Intl.NumberFormat('pt-PT', { style: 'currency', currency:
 const eurK = (v) => (Math.abs(v) >= 1e6 ? (v / 1e6).toFixed(2).replace('.', ',') + ' M€' : Math.abs(v) >= 1e3 ? Math.round(v / 1e3) + ' k€' : eur(v));
 const pct = (v) => (v == null ? '—' : (v >= 0 ? '+' : '') + v.toFixed(1).replace('.', ',') + ' %');
 const short = (n) => String(n || '').split(' - ')[0].split(',')[0];
-const STRENGTH = { fraco: ['Fraco', '#059669', '#ecfdf5'], medio: ['Médio', '#d97706', '#fffbeb'], forte: ['Forte', '#dc2626', '#fef2f2'], dominante: ['Dominante', '#7f1d1d', '#fee2e2'] };
+const STRENGTH = { fraco: ['Fraco', 'var(--ok)', 'var(--ok-bg)'], medio: ['Médio', 'var(--warn)', 'var(--warn-bg)'], forte: ['Forte', 'var(--crit)', 'var(--crit-bg)'], dominante: ['Dominante', 'var(--crit)', 'var(--crit-bg)'] };
 const LEVERS = { '': '—', manter: 'Manter o que há', crescer: 'Crescer na conta', projeto: 'Há projeto à vista', recuperar: 'Recuperar o perdido', risco: 'Em risco', novo: 'Conta a abrir' };
-const STATUS = { no_caminho: ['No caminho', '#059669'], em_risco: ['Em risco', '#d97706'], atrasado: ['Atrasado', '#dc2626'] };
+const STATUS = { no_caminho: ['No caminho', 'var(--ok)'], em_risco: ['Em risco', 'var(--warn)'], atrasado: ['Atrasado', 'var(--crit)'] };
 
 function parseCompetitors(name, strength) {
   try { const p = JSON.parse(name); if (Array.isArray(p)) return p; } catch { /* string simples */ }
@@ -87,7 +87,7 @@ export default function Contas() {
     <div>
       <div style={st.header}>
         <div><h1 style={st.title}>Contas</h1><p style={st.subtitle}>{accounts.length} clientes Grandes Contas · números do Odoo + concorrentes, contactos e plano {Y + 1}</p></div>
-        <span style={{ fontSize: 12, color: '#9ca3af' }}>{saving}</span>
+        <span style={{ fontSize: 12, color: 'var(--muted-2)' }}>{saving}</span>
       </div>
       <div style={st.layout}>
         <div style={st.listCol}>
@@ -95,15 +95,15 @@ export default function Contas() {
           {accounts.map((a) => {
             const stt = STATUS[a.status];
             return (
-              <div key={a.id} onClick={() => setSel(a.id)} style={{ ...st.item, borderColor: sel === a.id ? '#667eea' : '#e5e7eb', background: sel === a.id ? '#f0f4ff' : 'white' }}>
+              <div key={a.id} onClick={() => setSel(a.id)} style={{ ...st.item, borderColor: sel === a.id ? 'var(--accent)' : 'var(--border)', background: sel === a.id ? 'var(--accent-bg)' : 'var(--surface)' }}>
                 <div style={st.itemTop}><span style={st.itemName}>{short(a.name)}</span><span style={st.itemVal}>{eurK(a.ytd)}</span></div>
                 <div style={st.itemSub}>
-                  <span style={{ color: a.delta_pct == null ? '#9ca3af' : a.delta_pct >= 0 ? '#059669' : '#dc2626', fontWeight: 600 }}>{pct(a.delta_pct)}</span>
+                  <span style={{ color: a.delta_pct == null ? 'var(--muted-2)' : a.delta_pct >= 0 ? 'var(--ok)' : 'var(--crit)', fontWeight: 600 }}>{pct(a.delta_pct)}</span>
                   {stt && <span style={{ color: stt[1] }}> · {stt[0]}</span>}
-                  {a.alerts.length > 0 && <span style={{ color: '#dc2626' }}> · {a.alerts.length} alerta{a.alerts.length > 1 ? 's' : ''}</span>}
+                  {a.alerts.length > 0 && <span style={{ color: 'var(--crit)' }}> · {a.alerts.length} alerta{a.alerts.length > 1 ? 's' : ''}</span>}
                 </div>
                 <div style={st.itemChips}>
-                  {a.competitors.slice(0, 3).map((c, i) => <span key={i} style={{ ...st.mini, color: (STRENGTH[c.strength] || ['', '#6b7280'])[1] }}>{c.name}</span>)}
+                  {a.competitors.slice(0, 3).map((c, i) => <span key={i} style={{ ...st.mini, color: (STRENGTH[c.strength] || ['', 'var(--muted)'])[1] }}>{c.name}</span>)}
                   {a.contacts && a.contacts.total > 0 && <span style={st.mini}>👥 {a.contacts.total - a.contacts.placeholder}/{a.contacts.total}</span>}
                   {a.lever && <span style={st.mini}>{LEVERS[a.lever]}</span>}
                 </div>
@@ -137,21 +137,21 @@ function AccountDetail({ acc, Y, obj, onCompetitors, onPlan, onOrg, navigate }) 
       <div style={st.dHead}>
         <div>
           <h2 style={st.dName}>{acc.name}</h2>
-          <div style={st.dSub}>{Math.round(acc.share * 100)} % do faturado · <span style={{ color: '#667eea', cursor: 'pointer', fontWeight: 600 }} onClick={() => navigate('/odoo/sales')}>ver faturação →</span></div>
+          <div style={st.dSub}>{Math.round(acc.share * 100)} % do faturado · <span style={{ color: 'var(--accent)', cursor: 'pointer', fontWeight: 600 }} onClick={() => navigate('/odoo/sales')}>ver faturação →</span></div>
         </div>
       </div>
 
       <div style={st.kpis}>
-        <div style={st.kpi}><div style={st.kLabel}>Faturado {Y}</div><div style={st.kValue}>{eurK(acc.ytd)}</div><div style={st.kSub}><span style={{ color: acc.delta_pct == null ? '#9ca3af' : acc.delta_pct >= 0 ? '#059669' : '#dc2626', fontWeight: 600 }}>{pct(acc.delta_pct)}</span> vs {Y - 1} · ano passado {eurK(acc.prev_full)}</div></div>
-        <div style={st.kpi}><div style={st.kLabel}>Objectivo {Y}</div><div style={st.kValue}>{acc.target ? eurK(acc.target) : '—'}</div><div style={st.kSub}>{acc.target ? <>{Math.round((acc.done / acc.target) * 100)} % feito · esperado {eurK(expected)} · <span style={{ color: stt?.[1], fontWeight: 600 }}>{stt?.[0]}</span></> : <span style={{ color: '#667eea', cursor: 'pointer' }} onClick={() => navigate('/objectivos')}>definir em Objectivos →</span>}</div></div>
+        <div style={st.kpi}><div style={st.kLabel}>Faturado {Y}</div><div style={st.kValue}>{eurK(acc.ytd)}</div><div style={st.kSub}><span style={{ color: acc.delta_pct == null ? 'var(--muted-2)' : acc.delta_pct >= 0 ? 'var(--ok)' : 'var(--crit)', fontWeight: 600 }}>{pct(acc.delta_pct)}</span> vs {Y - 1} · ano passado {eurK(acc.prev_full)}</div></div>
+        <div style={st.kpi}><div style={st.kLabel}>Objectivo {Y}</div><div style={st.kValue}>{acc.target ? eurK(acc.target) : '—'}</div><div style={st.kSub}>{acc.target ? <>{Math.round((acc.done / acc.target) * 100)} % feito · esperado {eurK(expected)} · <span style={{ color: stt?.[1], fontWeight: 600 }}>{stt?.[0]}</span></> : <span style={{ color: 'var(--accent)', cursor: 'pointer' }} onClick={() => navigate('/objectivos')}>definir em Objectivos →</span>}</div></div>
         <div style={st.kpi}><div style={st.kLabel}>Projecção fecho</div><div style={st.kValue}>{acc.projection ? eurK(acc.projection) : '—'}</div><div style={st.kSub}>{acc.target && acc.projection ? `${Math.round((acc.projection / acc.target) * 100)} % do objectivo` : 'faturado + resto do ano como em ' + (Y - 1)}</div></div>
       </div>
 
       {acc.alerts.length > 0 && (
         <div style={st.section}>
-          <div style={st.sTitle}>Alertas desta conta <span style={st.sSub}>· <span style={{ color: '#667eea', cursor: 'pointer' }} onClick={() => navigate('/alertas')}>ver todos →</span></span></div>
+          <div style={st.sTitle}>Alertas desta conta <span style={st.sSub}>· <span style={{ color: 'var(--accent)', cursor: 'pointer' }} onClick={() => navigate('/alertas')}>ver todos →</span></span></div>
           {acc.alerts.slice(0, 5).map((a, i) => (
-            <div key={i} style={st.alertRow}><span style={{ ...st.dot, background: a.severity === 'critical' ? '#dc2626' : a.severity === 'warning' ? '#d97706' : '#2563eb' }} /><b>{a.title}</b><span style={{ color: '#6b7280' }}>{a.detail}</span></div>
+            <div key={i} style={st.alertRow}><span style={{ ...st.dot, background: a.severity === 'critical' ? 'var(--crit)' : a.severity === 'warning' ? 'var(--warn)' : 'var(--info)' }} /><b>{a.title}</b><span style={{ color: 'var(--muted)' }}>{a.detail}</span></div>
           ))}
         </div>
       )}
@@ -161,7 +161,7 @@ function AccountDetail({ acc, Y, obj, onCompetitors, onPlan, onOrg, navigate }) 
           <button onClick={() => (editC ? (onCompetitors(comps), setEditC(false)) : setEditC(true))} style={st.smallBtn}>{editC ? 'Guardar' : '✎ Editar'}</button>
         </div>
         {!editC ? (
-          <div style={st.chips}>{acc.competitors.length ? acc.competitors.map((c, i) => { const s = STRENGTH[c.strength]; return <span key={i} style={{ ...st.chip, color: s?.[1] || '#374151', background: s?.[2] || '#f9fafb' }}>⚔ {c.name}{s ? ` · ${s[0]}` : ''}</span>; }) : <span style={st.muted}>sem concorrentes registados</span>}</div>
+          <div style={st.chips}>{acc.competitors.length ? acc.competitors.map((c, i) => { const s = STRENGTH[c.strength]; return <span key={i} style={{ ...st.chip, color: s?.[1] || 'var(--ink-2)', background: s?.[2] || 'var(--surface-2)' }}>⚔ {c.name}{s ? ` · ${s[0]}` : ''}</span>; }) : <span style={st.muted}>sem concorrentes registados</span>}</div>
         ) : (
           <div style={{ display: 'grid', gap: 6 }}>
             {comps.map((c, i) => (
@@ -196,42 +196,42 @@ function AccountDetail({ acc, Y, obj, onCompetitors, onPlan, onOrg, navigate }) 
 }
 
 const st = {
-  loading: { padding: '40px', color: '#6b7280', fontSize: '14px' },
+  loading: { padding: '40px', color: 'var(--muted)', fontSize: '14px' },
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '18px' },
-  title: { fontSize: '20px', fontWeight: '600', color: '#111827', margin: '0 0 4px 0', letterSpacing: '-0.3px' },
-  subtitle: { fontSize: '13px', color: '#9ca3af', margin: 0 },
+  title: { fontSize: '20px', fontWeight: '600', color: 'var(--ink)', margin: '0 0 4px 0', letterSpacing: '-0.3px' },
+  subtitle: { fontSize: '13px', color: 'var(--muted-2)', margin: 0 },
   layout: { display: 'grid', gridTemplateColumns: '340px 1fr', gap: '16px', alignItems: 'start' },
   listCol: { display: 'grid', gap: 8, position: 'sticky', top: 20, maxHeight: 'calc(100vh - 120px)', overflowY: 'auto', paddingRight: 4 },
   search: { padding: '9px 12px', border: '1px solid #e5e7eb', borderRadius: '8px', fontSize: '13px', fontFamily: 'inherit', outline: 'none' },
   item: { border: '1px solid', borderRadius: '10px', padding: '10px 12px', cursor: 'pointer' },
   itemTop: { display: 'flex', justifyContent: 'space-between', gap: 8 },
-  itemName: { fontWeight: 600, color: '#111827', fontSize: '13px' },
-  itemVal: { fontWeight: 600, color: '#374151', fontSize: '13px', fontVariantNumeric: 'tabular-nums' },
-  itemSub: { fontSize: '12px', color: '#6b7280', marginTop: 2 },
+  itemName: { fontWeight: 600, color: 'var(--ink)', fontSize: '13px' },
+  itemVal: { fontWeight: 600, color: 'var(--ink-2)', fontSize: '13px', fontVariantNumeric: 'tabular-nums' },
+  itemSub: { fontSize: '12px', color: 'var(--muted)', marginTop: 2 },
   itemChips: { display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 6 },
-  mini: { fontSize: '10px', padding: '1px 6px', borderRadius: 6, background: '#f3f4f6', color: '#4b5563' },
-  detailCol: { background: 'white', border: '1px solid #e5e7eb', borderRadius: '12px', padding: '18px 20px', minHeight: 300 },
-  placeholder: { color: '#9ca3af', padding: 40, textAlign: 'center' },
+  mini: { fontSize: '10px', padding: '1px 6px', borderRadius: 6, background: 'var(--border-2)', color: 'var(--ink-2)' },
+  detailCol: { background: 'var(--surface)', border: '1px solid #e5e7eb', borderRadius: '12px', padding: '18px 20px', minHeight: 300 },
+  placeholder: { color: 'var(--muted-2)', padding: 40, textAlign: 'center' },
   dHead: { marginBottom: 14 },
-  dName: { fontSize: '18px', fontWeight: 600, color: '#111827', margin: 0 },
-  dSub: { fontSize: '12px', color: '#6b7280', marginTop: 2 },
+  dName: { fontSize: '18px', fontWeight: 600, color: 'var(--ink)', margin: 0 },
+  dSub: { fontSize: '12px', color: 'var(--muted)', marginTop: 2 },
   kpis: { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 16 },
-  kpi: { background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: 10, padding: '10px 12px' },
-  kLabel: { fontSize: 11, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 },
-  kValue: { fontSize: 20, fontWeight: 700, color: '#111827', marginTop: 2 },
-  kSub: { fontSize: 12, color: '#6b7280', marginTop: 2 },
+  kpi: { background: 'var(--surface-2)', border: '1px solid #e5e7eb', borderRadius: 10, padding: '10px 12px' },
+  kLabel: { fontSize: 11, color: 'var(--muted-2)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 },
+  kValue: { fontSize: 20, fontWeight: 700, color: 'var(--ink)', marginTop: 2 },
+  kSub: { fontSize: 12, color: 'var(--muted)', marginTop: 2 },
   section: { borderTop: '1px solid #f3f4f6', paddingTop: 12, marginTop: 12 },
-  sTitle: { fontSize: 14, fontWeight: 600, color: '#111827', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
-  sSub: { fontSize: 12, fontWeight: 400, color: '#9ca3af' },
-  smallBtn: { marginLeft: 'auto', padding: '5px 10px', border: '1px solid #e5e7eb', background: 'white', borderRadius: 7, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', color: '#374151' },
-  xBtn: { padding: '0 10px', border: '1px solid #e5e7eb', background: 'white', borderRadius: 7, cursor: 'pointer', color: '#9ca3af' },
+  sTitle: { fontSize: 14, fontWeight: 600, color: 'var(--ink)', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
+  sSub: { fontSize: 12, fontWeight: 400, color: 'var(--muted-2)' },
+  smallBtn: { marginLeft: 'auto', padding: '5px 10px', border: '1px solid #e5e7eb', background: 'var(--surface)', borderRadius: 7, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', color: 'var(--ink-2)' },
+  xBtn: { padding: '0 10px', border: '1px solid #e5e7eb', background: 'var(--surface)', borderRadius: 7, cursor: 'pointer', color: 'var(--muted-2)' },
   chips: { display: 'flex', flexWrap: 'wrap', gap: 6 },
   chip: { fontSize: 12, padding: '4px 10px', borderRadius: 8, fontWeight: 600 },
-  muted: { fontSize: 13, color: '#9ca3af' },
+  muted: { fontSize: 13, color: 'var(--muted-2)' },
   alertRow: { display: 'flex', gap: 8, alignItems: 'baseline', fontSize: 13, padding: '5px 0', borderBottom: '1px solid #f9fafb' },
   dot: { width: 8, height: 8, borderRadius: '50%', flexShrink: 0, position: 'relative', top: -1 },
-  lbl: { display: 'grid', gap: 4, fontSize: 11, color: '#6b7280', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' },
+  lbl: { display: 'grid', gap: 4, fontSize: 11, color: 'var(--muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' },
   input: { padding: '7px 9px', border: '1px solid #e5e7eb', borderRadius: 7, fontSize: 13, fontFamily: 'inherit', width: '100%', boxSizing: 'border-box' },
-  select: { padding: '7px 9px', border: '1px solid #e5e7eb', borderRadius: 7, fontSize: 13, fontFamily: 'inherit', background: 'white', width: '100%' },
+  select: { padding: '7px 9px', border: '1px solid #e5e7eb', borderRadius: 7, fontSize: 13, fontFamily: 'inherit', background: 'var(--surface)', width: '100%' },
   textarea: { padding: '7px 9px', border: '1px solid #e5e7eb', borderRadius: 7, fontSize: 13, fontFamily: 'inherit', minHeight: 64, resize: 'vertical', width: '100%', boxSizing: 'border-box' },
 };

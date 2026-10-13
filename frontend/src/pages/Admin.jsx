@@ -194,8 +194,8 @@ function UsersTab() {
                 <td style={styles.td}>
                   <span style={{
                     ...styles.badge,
-                    background: u.role === 'admin' ? '#f0f4ff' : '#f0fdf4',
-                    color: u.role === 'admin' ? '#667eea' : '#16a34a',
+                    background: u.role === 'admin' ? 'var(--accent-bg)' : 'var(--ok-bg)',
+                    color: u.role === 'admin' ? 'var(--accent)' : 'var(--ok)',
                   }}>
                     {u.role === 'admin' ? 'Admin' : 'User'}
                   </span>
@@ -205,7 +205,7 @@ function UsersTab() {
                     onClick={() => toggleComissoes(u.id, u.can_view_comissoes)}
                     style={{
                       ...styles.toggleBtn,
-                      background: u.can_view_comissoes ? '#667eea' : '#e5e7eb',
+                      background: u.can_view_comissoes ? 'var(--accent)' : 'var(--border)',
                     }}
                   >
                     <span style={{
@@ -217,8 +217,8 @@ function UsersTab() {
                 <td style={styles.td}>
                   <span style={{
                     ...styles.badge,
-                    background: u.temp_password ? '#fef3c7' : '#f0fdf4',
-                    color: u.temp_password ? '#d97706' : '#16a34a',
+                    background: u.temp_password ? 'var(--warn-bg)' : 'var(--ok-bg)',
+                    color: u.temp_password ? 'var(--warn)' : 'var(--ok)',
                   }}>
                     {u.temp_password ? 'Pendente' : 'Activo'}
                   </span>
@@ -233,7 +233,7 @@ function UsersTab() {
                     {u.id !== currentUser.id && (
                       <button
                         onClick={() => handleDelete(u.id, u.name)}
-                        style={{ ...styles.actionBtn, color: '#ef4444' }}
+                        style={{ ...styles.actionBtn, color: 'var(--crit)' }}
                         title="Remover"
                       >🗑️</button>
                     )}
@@ -316,8 +316,8 @@ function UploadTab() {
       <div
         style={{
           ...styles.dropZone,
-          borderColor: dragOver ? '#667eea' : '#d1d5db',
-          background: dragOver ? '#f0f4ff' : '#fafafa',
+          borderColor: dragOver ? 'var(--accent)' : 'var(--muted-3)',
+          background: dragOver ? 'var(--accent-bg)' : 'var(--bg)',
         }}
         onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
         onDragLeave={() => setDragOver(false)}
@@ -381,7 +381,7 @@ function UploadTab() {
                     <td style={styles.td}>
                       <button
                         onClick={() => handleDeleteUpload(u.id)}
-                        style={{ ...styles.actionBtn, color: '#ef4444' }}
+                        style={{ ...styles.actionBtn, color: 'var(--crit)' }}
                         title="Remover upload e dados"
                       >🗑️</button>
                     </td>
@@ -472,8 +472,8 @@ function ClientsTab() {
               onClick={() => selectUser(u)}
               style={{
                 ...styles.userCard,
-                borderColor: selectedUser?.id === u.id ? '#667eea' : '#e5e7eb',
-                background: selectedUser?.id === u.id ? '#f0f4ff' : 'white',
+                borderColor: selectedUser?.id === u.id ? 'var(--accent)' : 'var(--border)',
+                background: selectedUser?.id === u.id ? 'var(--accent-bg)' : 'var(--surface)',
               }}
             >
               <span style={styles.userCardName}>{u.name}</span>
@@ -551,7 +551,7 @@ const styles = {
   pageTitle: {
     fontSize: '20px',
     fontWeight: '600',
-    color: '#111827',
+    color: 'var(--ink)',
     marginBottom: '24px',
     letterSpacing: '-0.3px',
   },
@@ -561,7 +561,7 @@ const styles = {
     display: 'flex',
     gap: '4px',
     marginBottom: '28px',
-    background: '#f3f4f6',
+    background: 'var(--border-2)',
     borderRadius: '10px',
     padding: '4px',
   },
@@ -576,13 +576,13 @@ const styles = {
     cursor: 'pointer',
     fontSize: '13px',
     fontWeight: '500',
-    color: '#6b7280',
+    color: 'var(--muted)',
     fontFamily: 'inherit',
     transition: 'all 0.15s',
   },
   tabActive: {
-    background: 'white',
-    color: '#111827',
+    background: 'var(--surface)',
+    color: 'var(--ink)',
     fontWeight: '600',
     boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
   },
@@ -596,11 +596,11 @@ const styles = {
   },
   sectionCount: {
     fontSize: '13px',
-    color: '#9ca3af',
+    color: 'var(--muted-2)',
   },
   addBtn: {
     padding: '8px 20px',
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    background: 'linear-gradient(135deg, var(--accent), var(--accent-2))',
     color: 'white',
     border: 'none',
     borderRadius: '8px',
@@ -612,7 +612,7 @@ const styles = {
 
   // Form
   formCard: {
-    background: 'white',
+    background: 'var(--surface)',
     border: '1px solid #e5e7eb',
     borderRadius: '12px',
     padding: '24px',
@@ -621,7 +621,7 @@ const styles = {
   formTitle: {
     fontSize: '15px',
     fontWeight: '600',
-    color: '#111827',
+    color: 'var(--ink)',
     marginBottom: '16px',
   },
   formGrid: {
@@ -638,7 +638,7 @@ const styles = {
   label: {
     fontSize: '12px',
     fontWeight: '500',
-    color: '#374151',
+    color: 'var(--ink-2)',
   },
   input: {
     padding: '10px 12px',
@@ -647,11 +647,11 @@ const styles = {
     fontSize: '13px',
     outline: 'none',
     fontFamily: 'inherit',
-    background: '#fafafa',
+    background: 'var(--bg)',
   },
   submitBtn: {
     padding: '10px 24px',
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    background: 'linear-gradient(135deg, var(--accent), var(--accent-2))',
     color: 'white',
     border: 'none',
     borderRadius: '8px',
@@ -664,7 +664,7 @@ const styles = {
 
   // Table
   tableWrapper: {
-    background: 'white',
+    background: 'var(--surface)',
     border: '1px solid #e5e7eb',
     borderRadius: '12px',
     overflow: 'hidden',
@@ -678,10 +678,10 @@ const styles = {
     textAlign: 'left',
     fontSize: '11px',
     fontWeight: '600',
-    color: '#9ca3af',
+    color: 'var(--muted-2)',
     textTransform: 'uppercase',
     letterSpacing: '0.5px',
-    background: '#fafafa',
+    background: 'var(--bg)',
     borderBottom: '1px solid #f3f4f6',
   },
   tr: {
@@ -693,10 +693,10 @@ const styles = {
   },
   userName: {
     fontWeight: '500',
-    color: '#111827',
+    color: 'var(--ink)',
   },
   userEmail: {
-    color: '#6b7280',
+    color: 'var(--muted)',
     fontSize: '12px',
   },
   badge: {
@@ -733,7 +733,7 @@ const styles = {
     width: '16px',
     height: '16px',
     borderRadius: '50%',
-    background: 'white',
+    background: 'var(--surface)',
     position: 'absolute',
     top: '2px',
     left: '2px',
@@ -758,24 +758,24 @@ const styles = {
   },
   dropText: {
     fontSize: '14px',
-    color: '#374151',
+    color: 'var(--ink-2)',
     fontWeight: '500',
     margin: 0,
   },
   dropSubtext: {
     fontSize: '12px',
-    color: '#9ca3af',
+    color: 'var(--muted-2)',
     margin: 0,
   },
   fileBtn: {
     padding: '10px 24px',
-    background: 'white',
+    background: 'var(--surface)',
     border: '1px solid #d1d5db',
     borderRadius: '8px',
     fontSize: '13px',
     fontWeight: '500',
     cursor: 'pointer',
-    color: '#374151',
+    color: 'var(--ink-2)',
     marginTop: '4px',
   },
 
@@ -786,7 +786,7 @@ const styles = {
     gap: '24px',
   },
   clientsUserList: {
-    background: 'white',
+    background: 'var(--surface)',
     border: '1px solid #e5e7eb',
     borderRadius: '12px',
     padding: '20px',
@@ -799,7 +799,7 @@ const styles = {
     padding: '12px 14px',
     border: '1px solid #e5e7eb',
     borderRadius: '8px',
-    background: 'white',
+    background: 'var(--surface)',
     cursor: 'pointer',
     textAlign: 'left',
     marginBottom: '8px',
@@ -809,14 +809,14 @@ const styles = {
   userCardName: {
     fontSize: '13px',
     fontWeight: '600',
-    color: '#111827',
+    color: 'var(--ink)',
   },
   userCardEmail: {
     fontSize: '11px',
-    color: '#9ca3af',
+    color: 'var(--muted-2)',
   },
   clientsAssignment: {
-    background: 'white',
+    background: 'var(--surface)',
     border: '1px solid #e5e7eb',
     borderRadius: '12px',
     padding: '20px',
@@ -829,7 +829,7 @@ const styles = {
   },
   allClientsToggle: {
     padding: '14px 16px',
-    background: '#f9fafb',
+    background: 'var(--surface-2)',
     borderRadius: '8px',
     marginBottom: '16px',
   },
@@ -839,13 +839,13 @@ const styles = {
     gap: '10px',
     fontSize: '13px',
     fontWeight: '500',
-    color: '#374151',
+    color: 'var(--ink-2)',
     cursor: 'pointer',
   },
   checkbox: {
     width: '16px',
     height: '16px',
-    accentColor: '#667eea',
+    accentColor: 'var(--accent)',
     cursor: 'pointer',
   },
   clientsList: {
@@ -866,7 +866,7 @@ const styles = {
     transition: 'background 0.1s',
   },
   clientName: {
-    color: '#374151',
+    color: 'var(--ink-2)',
   },
 
   // States
@@ -880,26 +880,26 @@ const styles = {
   },
   emptyText: {
     fontSize: '13px',
-    color: '#9ca3af',
+    color: 'var(--muted-2)',
     textAlign: 'center',
   },
   loading: {
     fontSize: '13px',
-    color: '#9ca3af',
+    color: 'var(--muted-2)',
     textAlign: 'center',
     padding: '40px',
   },
   error: {
-    background: '#fef2f2',
-    color: '#dc2626',
+    background: 'var(--crit-bg)',
+    color: 'var(--crit)',
     padding: '12px',
     borderRadius: '8px',
     fontSize: '13px',
     marginTop: '12px',
   },
   success: {
-    background: '#f0fdf4',
-    color: '#16a34a',
+    background: 'var(--ok-bg)',
+    color: 'var(--ok)',
     padding: '12px',
     borderRadius: '8px',
     fontSize: '13px',

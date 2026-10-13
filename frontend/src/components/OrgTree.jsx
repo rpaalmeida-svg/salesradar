@@ -106,10 +106,10 @@ function ContactCard({ contact, contacts, onClose, onSave, onDelete }) {
   };
 
   const actionStatusConfig = {
-    none: { label: 'Sem acção', color: '#9ca3af', bg: '#f9fafb' },
-    pendente: { label: 'Pendente', color: '#f59e0b', bg: '#fffbeb' },
-    em_curso: { label: 'Em Curso', color: '#3b82f6', bg: '#eff6ff' },
-    concluido: { label: 'Concluído', color: '#16a34a', bg: '#f0fdf4' },
+    none: { label: 'Sem acção', color: 'var(--muted-2)', bg: 'var(--surface-2)' },
+    pendente: { label: 'Pendente', color: 'var(--warn)', bg: 'var(--warn-bg)' },
+    em_curso: { label: 'Em Curso', color: 'var(--info)', bg: 'var(--info-bg)' },
+    concluido: { label: 'Concluído', color: 'var(--ok)', bg: 'var(--ok-bg)' },
   };
 
   return (
@@ -138,7 +138,7 @@ function ContactCard({ contact, contacts, onClose, onSave, onDelete }) {
               name: e.target.checked ? '' : form.name
             })}
           />
-          <span style={{ fontSize: '13px', color: '#6b7280' }}>
+          <span style={{ fontSize: '13px', color: 'var(--muted)' }}>
             Posição conhecida mas pessoa não identificada
           </span>
         </label>
@@ -232,7 +232,7 @@ function ContactCard({ contact, contacts, onClose, onSave, onDelete }) {
               ))}
             </select>
             {parentChanged && (
-              <span style={{ fontSize: '11px', color: '#f59e0b', marginTop: '4px' }}>
+              <span style={{ fontSize: '11px', color: 'var(--warn)', marginTop: '4px' }}>
                 ⚠️ Este contacto será movido na árvore ao guardar
               </span>
             )}
@@ -326,9 +326,9 @@ function TreeNode({ node, level, onEdit, onAddChild, maxLevel }) {
 
   const actionDot = {
     none: null,
-    pendente: '#f59e0b',
-    em_curso: '#3b82f6',
-    concluido: '#16a34a',
+    pendente: 'var(--warn)',
+    em_curso: 'var(--info)',
+    concluido: 'var(--ok)',
   };
 
   const dotColor = actionDot[node.action_status];
@@ -364,7 +364,7 @@ function TreeNode({ node, level, onEdit, onAddChild, maxLevel }) {
             <span style={{
               ...styles.treeNodeName,
               fontStyle: node.is_placeholder ? 'italic' : 'normal',
-              color: node.is_placeholder ? '#9ca3af' : '#111827',
+              color: node.is_placeholder ? 'var(--muted-2)' : 'var(--ink)',
             }}>
               {node.is_placeholder ? '(por identificar)' : (node.name || '—')}
             </span>
@@ -507,7 +507,7 @@ export default function OrgTree({ strategyId, clientName, onClose }) {
       <div style={{
         padding: '40px',
         textAlign: 'center',
-        color: '#9ca3af',
+        color: 'var(--muted-2)',
         fontSize: '14px'
       }}>
         A carregar...
@@ -544,19 +544,19 @@ export default function OrgTree({ strategyId, clientName, onClose }) {
             <span style={styles.statLabel}>Total</span>
           </div>
           <div style={styles.statItem}>
-            <span style={{ ...styles.statValue, color: '#16a34a' }}>
+            <span style={{ ...styles.statValue, color: 'var(--ok)' }}>
               {stats.identified}
             </span>
             <span style={styles.statLabel}>Identificados</span>
           </div>
           <div style={styles.statItem}>
-            <span style={{ ...styles.statValue, color: '#9ca3af' }}>
+            <span style={{ ...styles.statValue, color: 'var(--muted-2)' }}>
               {stats.placeholders}
             </span>
             <span style={styles.statLabel}>Por identificar</span>
           </div>
           <div style={styles.statItem}>
-            <span style={{ ...styles.statValue, color: '#f59e0b' }}>
+            <span style={{ ...styles.statValue, color: 'var(--warn)' }}>
               {stats.actions_pending}
             </span>
             <span style={styles.statLabel}>Acções Pend.</span>
@@ -576,13 +576,13 @@ export default function OrgTree({ strategyId, clientName, onClose }) {
       {/* Legenda */}
       <div style={styles.legend}>
         <span style={styles.legendItem}>
-          <span style={{ ...styles.legendDot, background: '#f59e0b' }} /> Acção pendente
+          <span style={{ ...styles.legendDot, background: 'var(--warn)' }} /> Acção pendente
         </span>
         <span style={styles.legendItem}>
-          <span style={{ ...styles.legendDot, background: '#3b82f6' }} /> Em curso
+          <span style={{ ...styles.legendDot, background: 'var(--info)' }} /> Em curso
         </span>
         <span style={styles.legendItem}>
-          <span style={{ ...styles.legendDot, background: '#16a34a' }} /> Concluída
+          <span style={{ ...styles.legendDot, background: 'var(--ok)' }} /> Concluída
         </span>
         <span style={styles.legendItem}>
           <span style={{
@@ -658,30 +658,30 @@ const styles = {
     background: 'none',
     border: 'none',
     fontSize: '13px',
-    color: '#667eea',
+    color: 'var(--accent)',
     cursor: 'pointer',
     padding: 0,
     fontFamily: 'inherit',
     fontWeight: '500',
   },
   breadcrumbSep: {
-    color: '#d1d5db',
+    color: 'var(--muted-3)',
     fontSize: '13px',
   },
   breadcrumbCurrent: {
     fontSize: '13px',
-    color: '#6b7280',
+    color: 'var(--muted)',
   },
   title: {
     fontSize: '22px',
     fontWeight: '700',
-    color: '#111827',
+    color: 'var(--ink)',
     margin: 0,
     letterSpacing: '-0.3px',
   },
   addRootBtn: {
     padding: '10px 20px',
-    background: 'linear-gradient(135deg, #667eea, #764ba2)',
+    background: 'linear-gradient(135deg, var(--accent), var(--accent-2))',
     color: 'white',
     border: 'none',
     borderRadius: '8px',
@@ -694,7 +694,7 @@ const styles = {
   statsBar: {
     display: 'flex',
     gap: '16px',
-    background: 'white',
+    background: 'var(--surface)',
     border: '1px solid #e5e7eb',
     borderRadius: '10px',
     padding: '16px 24px',
@@ -711,23 +711,23 @@ const styles = {
   statValue: {
     fontSize: '20px',
     fontWeight: '700',
-    color: '#111827',
+    color: 'var(--ink)',
   },
   statLabel: {
     fontSize: '11px',
-    color: '#9ca3af',
+    color: 'var(--muted-2)',
     textTransform: 'uppercase',
   },
   coverageBar: {
     width: '80px',
     height: '8px',
-    background: '#f3f4f6',
+    background: 'var(--border-2)',
     borderRadius: '4px',
     overflow: 'hidden',
   },
   coverageFill: {
     height: '100%',
-    background: 'linear-gradient(135deg, #667eea, #764ba2)',
+    background: 'linear-gradient(135deg, var(--accent), var(--accent-2))',
     borderRadius: '4px',
     transition: 'width 0.3s',
   },
@@ -737,7 +737,7 @@ const styles = {
     gap: '16px',
     marginBottom: '20px',
     fontSize: '11px',
-    color: '#6b7280',
+    color: 'var(--muted)',
   },
   legendItem: {
     display: 'flex',
@@ -752,7 +752,7 @@ const styles = {
   },
   // Tree
   treeContainer: {
-    background: 'white',
+    background: 'var(--surface)',
     border: '1px solid #e5e7eb',
     borderRadius: '10px',
     padding: '20px',
@@ -771,7 +771,7 @@ const styles = {
     background: 'none',
     border: 'none',
     fontSize: '10px',
-    color: '#9ca3af',
+    color: 'var(--muted-2)',
     cursor: 'pointer',
     padding: '4px',
     minWidth: '20px',
@@ -798,35 +798,35 @@ const styles = {
   treeNodeRole: {
     fontSize: '12px',
     fontWeight: '600',
-    color: '#667eea',
+    color: 'var(--accent)',
     textTransform: 'uppercase',
     letterSpacing: '0.3px',
   },
   treeNodeSep: {
-    color: '#d1d5db',
+    color: 'var(--muted-3)',
     fontSize: '13px',
   },
   treeNodeName: {
     fontSize: '14px',
     fontWeight: '500',
-    color: '#111827',
+    color: 'var(--ink)',
   },
   treeNodeZone: {
     fontSize: '11px',
-    color: '#6b7280',
-    background: '#f3f4f6',
+    color: 'var(--muted)',
+    background: 'var(--border-2)',
     padding: '1px 8px',
     borderRadius: '4px',
   },
   treeNodeAction: {
     fontSize: '12px',
-    color: '#6b7280',
+    color: 'var(--muted)',
     marginTop: '4px',
     paddingLeft: '14px',
   },
   actionDate: {
     fontSize: '11px',
-    color: '#9ca3af',
+    color: 'var(--muted-2)',
     marginLeft: '8px',
   },
   addChildBtn: {
@@ -834,7 +834,7 @@ const styles = {
     border: '1px solid #e5e7eb',
     borderRadius: '4px',
     fontSize: '14px',
-    color: '#667eea',
+    color: 'var(--accent)',
     cursor: 'pointer',
     padding: '0 6px',
     fontWeight: '600',
@@ -859,12 +859,12 @@ const styles = {
   emptyTitle: {
     fontSize: '16px',
     fontWeight: '600',
-    color: '#374151',
+    color: 'var(--ink-2)',
     margin: 0,
   },
   emptyText: {
     fontSize: '13px',
-    color: '#9ca3af',
+    color: 'var(--muted-2)',
     margin: 0,
   },
   // Card Modal
@@ -882,7 +882,7 @@ const styles = {
     backdropFilter: 'blur(4px)',
   },
   cardModal: {
-    background: 'white',
+    background: 'var(--surface)',
     borderRadius: '16px',
     padding: '28px',
     width: '560px',
@@ -899,12 +899,12 @@ const styles = {
   cardTitle: {
     fontSize: '18px',
     fontWeight: '600',
-    color: '#111827',
+    color: 'var(--ink)',
     margin: 0,
   },
   placeholderBadge: {
     fontSize: '11px',
-    color: '#9ca3af',
+    color: 'var(--muted-2)',
     fontStyle: 'italic',
     marginTop: '2px',
     display: 'block',
@@ -913,7 +913,7 @@ const styles = {
     background: 'none',
     border: 'none',
     fontSize: '18px',
-    color: '#9ca3af',
+    color: 'var(--muted-2)',
     cursor: 'pointer',
   },
   checkboxRow: {
@@ -936,7 +936,7 @@ const styles = {
   cardLabel: {
     fontSize: '11px',
     fontWeight: '600',
-    color: '#374151',
+    color: 'var(--ink-2)',
     textTransform: 'uppercase',
     letterSpacing: '0.3px',
   },
@@ -955,7 +955,7 @@ const styles = {
     fontSize: '13px',
     outline: 'none',
     fontFamily: 'inherit',
-    background: 'white',
+    background: 'var(--surface)',
     cursor: 'pointer',
   },
   cardTextarea: {
@@ -976,7 +976,7 @@ const styles = {
   actionSeparatorText: {
     fontSize: '12px',
     fontWeight: '600',
-    color: '#374151',
+    color: 'var(--ink-2)',
   },
   cardFooter: {
     display: 'flex',
@@ -991,8 +991,8 @@ const styles = {
     border: '1px solid #fecaca',
     borderRadius: '8px',
     fontSize: '13px',
-    background: '#fef2f2',
-    color: '#dc2626',
+    background: 'var(--crit-bg)',
+    color: 'var(--crit)',
     cursor: 'pointer',
     fontFamily: 'inherit',
   },
@@ -1001,14 +1001,14 @@ const styles = {
     border: '1px solid #e5e7eb',
     borderRadius: '8px',
     fontSize: '13px',
-    background: 'white',
-    color: '#374151',
+    background: 'var(--surface)',
+    color: 'var(--ink-2)',
     cursor: 'pointer',
     fontFamily: 'inherit',
   },
   saveBtn: {
     padding: '9px 18px',
-    background: 'linear-gradient(135deg, #667eea, #764ba2)',
+    background: 'linear-gradient(135deg, var(--accent), var(--accent-2))',
     color: 'white',
     border: 'none',
     borderRadius: '8px',
