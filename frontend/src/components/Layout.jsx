@@ -12,7 +12,6 @@ const menuItems = [
 // Páginas alimentadas pelo Odoo (via extensão Chrome) — só administrador
 const odooSalesItems = [
   { path: '/odoo/sales', label: 'Grandes Contas (Odoo)', icon: '🧾' },
-  { path: '/odoo/plan', label: 'Objectivo 2027', icon: '🚀' },
 ];
 const odooStockItems = [
   { path: '/odoo/products', label: 'Todos os produtos', icon: '📦' },

@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import api from '../services/api';
 
 // Objectivos de facturação sobre os dados reais do Odoo (Grandes Contas).
@@ -18,6 +19,9 @@ const STATUS = {
 
 export default function Objectivos() {
   const Y = new Date().getFullYear();
+  const [params, setParams] = useSearchParams();
+  const tab = params.get('tab') === 'plan' ? 'plan' : 'track';
+  const setTab = (t) => setParams(t === 'plan' ? { tab: 'plan' } : {});
   const [year, setYear] = useState(Y);
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -71,8 +75,25 @@ export default function Objectivos() {
   const clients = data.clients.slice().sort((a, b) => (b.target || 0) - (a.target || 0) || b.ytd - a.ytd);
   const noTarget = clients.filter((c) => !c.target && (c.ytd > 0 || c.prev_full > 0));
 
+  const Tabs = () => (
+    <div style={styles.tabs}>
+      <button onClick={() => setTab('track')} style={{ ...styles.tab, ...(tab === 'track' ? styles.tabOn : {}) }}>Acompanhar {Y}</button>
+      <button onClick={() => setTab('plan')} style={{ ...styles.tab, ...(tab === 'plan' ? styles.tabOn : {}) }}>Planear {Y + 1}</button>
+    </div>
+  );
+
+  if (tab === 'plan') {
+    return (
+      <div style={{ margin: '-32px', display: 'flex', flexDirection: 'column', height: '100vh' }}>
+        <div style={{ padding: '14px 32px 0' }}><Tabs /></div>
+        <iframe title="plano" src="/odoo/plan.html" style={{ border: 'none', flex: 1, width: '100%' }} />
+      </div>
+    );
+  }
+
   return (
     <div>
+      <Tabs />
       <div style={styles.header}>
         <div>
           <h1 style={styles.pageTitle}>Objectivos de Facturação</h1>
@@ -179,6 +200,9 @@ export default function Objectivos() {
 }
 
 const styles = {
+  tabs: { display: 'inline-flex', gap: 4, background: '#f3f4f6', padding: 4, borderRadius: 10, marginBottom: 18 },
+  tab: { padding: '7px 16px', border: 'none', background: 'transparent', borderRadius: 7, fontSize: 13, fontWeight: 500, color: '#6b7280', cursor: 'pointer', fontFamily: 'inherit' },
+  tabOn: { background: 'white', color: '#111827', fontWeight: 600, boxShadow: '0 1px 2px rgba(0,0,0,.06)' },
   loading: { padding: '40px', color: '#6b7280', fontSize: '14px' },
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px', gap: '16px', flexWrap: 'wrap' },
   pageTitle: { fontSize: '20px', fontWeight: '600', color: '#111827', margin: '0 0 4px 0', letterSpacing: '-0.3px' },

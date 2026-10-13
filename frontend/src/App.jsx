@@ -64,7 +64,7 @@ function AppRoutes() {
         <Route path="/objectivos" element={<Objectivos />} />
         <Route path="/comissoes" element={<Comissoes />} />
         <Route path="/odoo/sales" element={<AdminRoute><OdooPage page="sales" /></AdminRoute>} />
-        <Route path="/odoo/plan" element={<AdminRoute><OdooPage page="plan" /></AdminRoute>} />
+        <Route path="/odoo/plan" element={<Navigate to="/objectivos?tab=plan" />} />
         <Route path="/odoo/products" element={<AdminRoute><OdooPage page="products" /></AdminRoute>} />
         <Route path="/odoo/ajax" element={<AdminRoute><OdooPage page="ajax" /></AdminRoute>} />
       </Route>

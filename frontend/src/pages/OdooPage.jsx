@@ -10,7 +10,7 @@ export default function OdooPage({ page }) {
   useEffect(() => {
     const onMsg = (e) => {
       if (e.data && e.data.type === 'odoo-navigate' && typeof e.data.page === 'string') {
-        const map = { sales: '/odoo/sales', plan: '/odoo/plan', products: '/odoo/products', ajax: '/odoo/ajax', warehouse: '/odoo/products', index: '/dashboard' };
+        const map = { sales: '/odoo/sales', plan: '/objectivos?tab=plan', products: '/odoo/products', ajax: '/odoo/ajax', warehouse: '/odoo/products', index: '/dashboard' };
         navigate(map[e.data.page] || '/dashboard');
       }
     };
