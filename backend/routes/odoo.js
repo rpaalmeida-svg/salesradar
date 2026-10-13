@@ -8,6 +8,7 @@ const db = require('../odoo/db');
 const parser = require('../odoo/parser');
 const systems = require('../odoo/systems');
 const sales = require('../odoo/sales');
+const alertsMod = require('../odoo/alerts');
 
 const CACHE_MS = Number(process.env.STOCK_CACHE_MINUTES || 10) * 60 * 1000;
 const STOCK_SOURCE = 'snapshot';
@@ -418,6 +419,15 @@ router.get('/dashboard-summary', async (req, res) => {
     top_clients: ov.clients.slice(0, 5).map((c) => ({ id: c.id, name: c.name, ytd: c.ytd, ytd_prev: c.ytd_prev, delta_pct: c.delta_pct, share: ov.totals.ytd ? c.ytd / ov.totals.ytd : 0, margin_pct: c.margin_pct })),
     stock,
   });
+});
+
+// ---- Alertas: vendas × stock × chegadas ----
+router.get('/alerts', async (req, res) => {
+  const s = await getSales();
+  let stockRows = [];
+  try { stockRows = (await buildDashboard(false)).rows; } catch { /* sem stock */ }
+  if (!s.data) return res.json({ empty: true, total: 0, alerts: [], summary: {} });
+  res.json({ taken_at: new Date(s.at).toISOString(), ...alertsMod.buildAlerts({ sales: s.data, stockRows }) });
 });
 
 // ---- Objectivos por cliente sobre os dados reais do Odoo ----

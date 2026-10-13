@@ -24,10 +24,11 @@ const PALETTE = ['#667eea', '#764ba2', '#10b981', '#f59e0b', '#ef4444', '#06b6d4
 export default function Dashboard() {
   const navigate = useNavigate();
   const [d, setD] = useState(null);
+  const [al, setAl] = useState(null);
   const [err, setErr] = useState('');
 
   useEffect(() => {
-    const load = () => api.get('/odoo/dashboard-summary').then((r) => setD(r.data)).catch((e) => setErr(e.message));
+    const load = () => { api.get('/odoo/dashboard-summary').then((r) => setD(r.data)).catch((e) => setErr(e.message)); api.get('/odoo/alerts').then((r) => setAl(r.data)).catch(() => {}); };
     load();
     window.addEventListener('odoo-updated', load);
     return () => window.removeEventListener('odoo-updated', load);
@@ -133,6 +134,22 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
+
+        {al && al.alerts && al.alerts.length > 0 && (
+          <div style={{ ...st.card, gridColumn: 'span 3' }}>
+            <div style={st.cardHead}><h2 style={st.cardTitle}>Alertas</h2><span style={st.cardSub}>{al.total} no total · os 5 com mais euros em jogo · <span style={{ color: '#667eea', cursor: 'pointer', fontWeight: 600 }} onClick={() => navigate('/alertas')}>ver todos →</span></span></div>
+            <div style={{ display: 'grid', gap: 6 }}>
+              {al.alerts.slice(0, 5).map((a, i) => (
+                <div key={i} onClick={() => navigate('/alertas')} style={{ display: 'flex', gap: 10, alignItems: 'baseline', padding: '7px 10px', borderRadius: 8, background: '#f9fafb', cursor: 'pointer', fontSize: 13 }}>
+                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: a.severity === 'critical' ? '#dc2626' : a.severity === 'warning' ? '#d97706' : '#2563eb', flexShrink: 0, position: 'relative', top: -1 }} />
+                  <span style={{ fontWeight: 600, color: '#111827' }}>{a.title}</span>
+                  <span style={{ color: '#6b7280', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.detail}</span>
+                  <span style={{ fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>{eurK(a.value)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div style={{ ...st.card, gridColumn: 'span 3' }}>
           <div style={st.cardHead}><h2 style={st.cardTitle}>Top 5 clientes</h2><span style={st.cardSub}>{tc.reduce((a, c) => a + c.share, 0) * 100 | 0} % do faturado · clica para o detalhe</span></div>

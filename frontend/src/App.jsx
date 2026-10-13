@@ -5,7 +5,7 @@ import Login from './pages/Login';
 import ChangePassword from './pages/ChangePassword';
 import Dashboard from './pages/Dashboard';
 import Admin from './pages/Admin';
-import Insights from './pages/Insights';
+import Alertas from './pages/Alertas';
 import Estrategia from './pages/Estrategia';
 import Objectivos from './pages/Objectivos';
 import Comissoes from './pages/Comissoes';
@@ -57,7 +57,8 @@ function AppRoutes() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
         <Route path="/" element={<Navigate to="/dashboard" />} />
-        <Route path="/insights" element={<Insights />} />
+        <Route path="/alertas" element={<Alertas />} />
+        <Route path="/insights" element={<Navigate to="/alertas" />} />
         <Route path="/estrategia" element={<Estrategia />} />
         <Route path="/objectivos" element={<Objectivos />} />
         <Route path="/comissoes" element={<Comissoes />} />

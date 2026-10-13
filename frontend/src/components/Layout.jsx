@@ -4,7 +4,7 @@ import OdooStatus from './OdooStatus';
 
 const menuItems = [
   { path: '/dashboard', label: 'Dashboard', icon: '📊' },
-  { path: '/insights', label: 'Insights', icon: '💡' },
+  { path: '/alertas', label: 'Alertas', icon: '🚨' },
   { path: '/estrategia', label: 'Estratégia', icon: '🎯' },
   { path: '/objectivos', label: 'Objectivos', icon: '📈' },
 ];
