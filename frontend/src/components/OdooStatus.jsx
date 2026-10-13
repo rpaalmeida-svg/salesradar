@@ -62,7 +62,7 @@ export default function OdooStatus() {
         {lastSub && <div style={s.sub}>{lastSub}</div>}
         {waiting && <div style={s.msg}>{isBusy ? (message || 'a ler o Odoo…') : 'pedido registado — arranca em menos de 1 min'}</div>}
         {!waiting && st.state === 'error' && message && <div style={{ ...s.msg, color: '#b91c1c' }}>{message}</div>}
-        <button onClick={() => push(what)} disabled={waiting || !alive || loggedOut} style={{ ...s.btn, opacity: waiting || !alive || loggedOut ? 0.55 : 1 }}>{waiting ? 'A atualizar…' : '↻ Atualizar'}</button>
+        <button onClick={() => push(what)} disabled={waiting} style={{ ...s.btn, opacity: waiting ? 0.55 : 1 }}>{waiting ? 'A atualizar…' : '↻ Atualizar'}</button>
       </div>
     );
   };
@@ -70,7 +70,7 @@ export default function OdooStatus() {
   return (
     <div style={s.box}>
       <div style={s.row}><span style={{ ...s.dot, background: head[1] }} /><span style={s.title}>Odoo</span><span style={{ ...s.state, color: head[1] }}>{head[0]}</span></div>
-      {loggedOut && <a href={ODOO_URL} target="_blank" rel="noreferrer" style={s.link}>Abrir o Odoo e entrar (Sophos) →</a>}
+      {loggedOut && <><a href={ODOO_URL} target="_blank" rel="noreferrer" style={s.link}>Abrir o Odoo e entrar (Sophos) →</a><div style={s.msg}>Assim que a sessão voltar, a extensão atualiza tudo sozinha (verifica de minuto a minuto).</div></>}
       {!alive && <div style={s.msg}>Último sinal da extensão {ago(ext.seen_at)}.</div>}
       <Card title="Vendas" what="sales" isBusy={!!busy.sales} last={st.sales_last_ok} message={st.sales_message} />
       <Card title="Stock" what="stock" isBusy={!!(busy.ajax || busy.catalog)} last={st.last_ok} lastSub={`catálogo ${ago(st.all_last_ok)}`} message={busy.catalog ? st.all_message : st.message} />
