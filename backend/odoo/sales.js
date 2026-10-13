@@ -99,7 +99,11 @@ function buildClient(snapshot, partnerId, today = new Date()) {
     const p = prods.get(l.product) || { product: l.product, brand: l.brand, qty: 0, amount: 0 };
     p.qty += l.qty || 0; p.amount += l.amount; prods.set(l.product, p);
   }
-  return { ...sub, products: Array.from(prods.values()).sort((a, b) => b.amount - a.amount).slice(0, 40) };
+  // últimas faturas (por data): soma das linhas de cada dia
+  const byDay = new Map();
+  for (const l of lines) { if (!l.date) continue; const d = byDay.get(l.date) || { date: l.date, amount: 0, lines: 0 }; d.amount += l.amount; d.lines++; byDay.set(l.date, d); }
+  const recent = Array.from(byDay.values()).sort((a, b) => b.date.localeCompare(a.date)).slice(0, 8);
+  return { ...sub, products: Array.from(prods.values()).sort((a, b) => b.amount - a.amount).slice(0, 40), recent };
 }
 
 module.exports = { buildOverview, buildClient };

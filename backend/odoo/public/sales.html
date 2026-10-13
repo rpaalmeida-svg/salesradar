@@ -208,6 +208,8 @@ async function openClient(id) {
       <div><div id="cChart"></div><div class="legend"><span><i style="background:var(--border)"></i>ano passado</span><span><i style="background:var(--accent)"></i>este ano</span></div></div>
       <div><table><thead><tr><th>Marca</th><th class="num">Este ano</th><th class="num">Δ</th><th class="num">Marg.</th></tr></thead><tbody id="cBrands"></tbody></table></div>
     </div>
+    <h2 style="margin-top:14px">Últimas faturas <span class="sub">(por dia)</span></h2>
+    <div class="chips">${(d.recent || []).map((r) => `<span class="chip">${fmtDate(r.date)} <b>${eur(r.amount)}</b> <span class="sub">· ${r.lines} linhas</span></span>`).join('') || '<span class="sub">—</span>'}</div>
     <h2 style="margin-top:14px">Produtos mais faturados este ano</h2>
     <div class="chips">${d.products.slice(0, 30).map((p) => `<span class="chip" title="${p.brand || ''}">${p.product} <b>${eur(p.amount)}</b> <span class="sub">· ${Math.round(p.qty)} un.</span></span>`).join('') || '<span class="sub">—</span>'}</div>`;
   renderChart(d.monthly, $('#cChart'));
