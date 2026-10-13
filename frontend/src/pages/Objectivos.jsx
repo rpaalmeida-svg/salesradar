@@ -37,7 +37,7 @@ export default function Objectivos() {
     } catch (e) { console.error(e); setData({ error: e.message }); }
     finally { setLoading(false); }
   };
-  useEffect(() => { load(); }, [year]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { load(); const h = () => load(); window.addEventListener('odoo-updated', h); return () => window.removeEventListener('odoo-updated', h); }, [year]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const save = async () => {
     setSaving('a guardar…');

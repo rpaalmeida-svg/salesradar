@@ -27,7 +27,10 @@ export default function Dashboard() {
   const [err, setErr] = useState('');
 
   useEffect(() => {
-    api.get('/odoo/dashboard-summary').then((r) => setD(r.data)).catch((e) => setErr(e.message));
+    const load = () => api.get('/odoo/dashboard-summary').then((r) => setD(r.data)).catch((e) => setErr(e.message));
+    load();
+    window.addEventListener('odoo-updated', load);
+    return () => window.removeEventListener('odoo-updated', load);
   }, []);
 
   if (err) return <div style={st.loading}>⚠ {err}</div>;

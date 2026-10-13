@@ -14,8 +14,10 @@ export default function OdooPage({ page }) {
         navigate(map[e.data.page] || '/dashboard');
       }
     };
+    const onUpdated = () => { try { ref.current?.contentWindow?.location.reload(); } catch { /* ignora */ } };
     window.addEventListener('message', onMsg);
-    return () => window.removeEventListener('message', onMsg);
+    window.addEventListener('odoo-updated', onUpdated);
+    return () => { window.removeEventListener('message', onMsg); window.removeEventListener('odoo-updated', onUpdated); };
   }, [navigate]);
 
   return (
