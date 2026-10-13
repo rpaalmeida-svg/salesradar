@@ -6,7 +6,7 @@ import ChangePassword from './pages/ChangePassword';
 import Dashboard from './pages/Dashboard';
 import Admin from './pages/Admin';
 import Alertas from './pages/Alertas';
-import Estrategia from './pages/Estrategia';
+import Contas from './pages/Contas';
 import Objectivos from './pages/Objectivos';
 import Comissoes from './pages/Comissoes';
 import OdooPage from './pages/OdooPage';
@@ -59,7 +59,8 @@ function AppRoutes() {
         <Route path="/" element={<Navigate to="/dashboard" />} />
         <Route path="/alertas" element={<Alertas />} />
         <Route path="/insights" element={<Navigate to="/alertas" />} />
-        <Route path="/estrategia" element={<Estrategia />} />
+        <Route path="/contas" element={<Contas />} />
+        <Route path="/estrategia" element={<Navigate to="/contas" />} />
         <Route path="/objectivos" element={<Objectivos />} />
         <Route path="/comissoes" element={<Comissoes />} />
         <Route path="/odoo/sales" element={<AdminRoute><OdooPage page="sales" /></AdminRoute>} />
