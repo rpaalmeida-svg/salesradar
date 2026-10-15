@@ -30,4 +30,12 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--a
 .neg { color: var(--critical); font-weight: 650; }
 .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 10px; font-size: 13px; opacity: 0; transition: opacity .2s; pointer-events: none; z-index: 30; }
 .toast.show { opacity: 1; }
-@media (max-width: 700px) { main { padding: 12px 12px 60px; } header { padding: 10px 12px; } }
+@media (max-width: 700px) {
+  html, body { overflow-x: hidden; max-width: 100vw; }
+  main { padding: 12px 12px 60px; }
+  header { padding: 10px 12px; gap: 8px; }
+  header h1 { font-size: 16px; }
+  header .meta { flex-basis: 100%; order: 10; }
+  header .spacer { display: none; }
+  input, select { font-size: 16px; }
+}

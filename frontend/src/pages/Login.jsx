@@ -21,12 +21,12 @@ export default function Login() {
   return (
     <div style={s.page}>
       <div style={s.glow} />
-      <header style={s.top}>
+      <header style={s.top} className="sr-login-top">
         <div style={s.brand}><Logo size={28} /><span>SalesRadar</span></div>
         <button onClick={toggle} style={s.themeBtn} title="Tema">{theme === 'dark' ? '☀️' : '🌙'}</button>
       </header>
 
-      <main style={s.main}>
+      <main style={s.main} className="sr-login-main">
         <section style={s.hero}>
           <div style={s.kicker}>Grandes Contas · Visiotech Portugal</div>
           <h1 style={s.h1}>As contas, o stock e o objetivo.<br />Num sítio só, com os números do Odoo.</h1>
@@ -38,7 +38,7 @@ export default function Login() {
           </div>
         </section>
 
-        <section style={s.card}>
+        <section style={s.card} className="sr-login-card">
           <h2 style={s.h2}>Entrar</h2>
           <p style={s.cardSub}>Acesso reservado à equipa.</p>
           <form onSubmit={handleSubmit} style={s.form}>
@@ -51,7 +51,7 @@ export default function Login() {
         </section>
       </main>
 
-      <footer style={s.bottom}>SalesRadar · Neuron Analytics · {new Date().getFullYear()}</footer>
+      <footer style={s.bottom} className="sr-login-bottom">SalesRadar · Neuron Analytics · {new Date().getFullYear()}</footer>
     </div>
   );
 }

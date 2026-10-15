@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import OdooStatus from './OdooStatus';
@@ -42,10 +43,28 @@ export default function Layout() {
   ];
   const embedded = location.pathname.startsWith('/odoo/');
 
+  // Telemóvel: o menu lateral vira gaveta (classes sr-* em index.css, só < 820px)
+  const [open, setOpen] = useState(false);
+  useEffect(() => { setOpen(false); }, [location.pathname]);
+  useEffect(() => {
+    document.body.style.overflow = open ? 'hidden' : '';
+    return () => { document.body.style.overflow = ''; };
+  }, [open]);
+  const current = sections.flatMap((x) => x.items).find((it) => it.path === location.pathname);
+
   return (
-    <div style={styles.wrapper}>
+    <div style={styles.wrapper} className="sr-wrapper">
+      {/* Barra de topo — só telemóvel */}
+      <div className="sr-topbar">
+        <button id="sr-menu-btn" className="sr-menu-btn" onClick={() => setOpen(true)} aria-label="Menu">☰</button>
+        <Logo size={22} />
+        <span className="sr-topbar-title">{current?.label || 'SalesRadar'}</span>
+        <button onClick={toggle} className="sr-menu-btn" title="Tema">{theme === 'dark' ? '☀️' : '🌙'}</button>
+      </div>
+      {open && <div className="sr-backdrop" onClick={() => setOpen(false)} />}
+
       {/* Sidebar */}
-      <aside style={styles.sidebar}>
+      <aside style={styles.sidebar} className={'sr-sidebar' + (open ? ' open' : '')}>
         <div style={styles.sidebarHeader}>
           <Logo size={26} />
           <span style={styles.sidebarTitle}>SalesRadar</span>
@@ -90,7 +109,7 @@ export default function Layout() {
       </aside>
 
       {/* Main Content */}
-      <main style={embedded ? styles.mainEmbedded : styles.main}>
+      <main style={embedded ? styles.mainEmbedded : styles.main} className={'sr-main' + (embedded ? ' embedded' : '')}>
         <Outlet />
       </main>
     </div>

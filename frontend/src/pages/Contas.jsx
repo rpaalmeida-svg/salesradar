@@ -89,8 +89,8 @@ export default function Contas() {
         <div><h1 style={st.title}>Contas</h1><p style={st.subtitle}>{accounts.length} clientes Grandes Contas · números do Odoo + concorrentes, contactos e plano {Y + 1}</p></div>
         <span style={{ fontSize: 12, color: 'var(--muted-2)' }}>{saving}</span>
       </div>
-      <div style={st.layout}>
-        <div style={st.listCol}>
+      <div style={st.layout} className={'sr-contas' + (cur ? ' has-sel' : '')}>
+        <div style={st.listCol} className="sr-contas-list">
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Pesquisar conta…" style={st.search} />
           {accounts.map((a) => {
             const stt = STATUS[a.status];
@@ -112,7 +112,8 @@ export default function Contas() {
           })}
         </div>
 
-        <div style={st.detailCol}>
+        <div style={st.detailCol} className="sr-contas-detail">
+          {cur && <button className="sr-contas-back" onClick={() => setSel(null)}>← Todas as contas</button>}
           {!cur ? <div style={st.placeholder}>Escolhe uma conta à esquerda.</div> : (
             <AccountDetail acc={cur} Y={Y} obj={obj} onCompetitors={(l) => saveCompetitors(cur, l)} onPlan={(p) => savePlan(cur, p)} onOrg={async () => setOrg(await ensureStrat(cur))} navigate={navigate} />
           )}

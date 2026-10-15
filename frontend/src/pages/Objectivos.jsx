@@ -84,8 +84,8 @@ export default function Objectivos() {
 
   if (tab === 'plan') {
     return (
-      <div style={{ margin: '-32px', display: 'flex', flexDirection: 'column', height: '100vh' }}>
-        <div style={{ padding: '14px 32px 0' }}><Tabs /></div>
+      <div className="sr-plan-wrap" style={{ margin: '-32px', display: 'flex', flexDirection: 'column', height: '100vh' }}>
+        <div className="sr-plan-tabs" style={{ padding: '14px 32px 0' }}><Tabs /></div>
         <iframe title="plano" src="/odoo/plan.html" style={{ border: 'none', flex: 1, width: '100%' }} />
       </div>
     );

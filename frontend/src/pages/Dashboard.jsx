@@ -145,10 +145,10 @@ export default function Dashboard() {
             <div style={st.cardHead}><h2 style={st.cardTitle}>Alertas</h2><span style={st.cardSub}>{al.total} no total · os 5 com mais euros em jogo · <span style={{ color: 'var(--accent)', cursor: 'pointer', fontWeight: 600 }} onClick={() => navigate('/alertas')}>ver todos →</span></span></div>
             <div style={{ display: 'grid', gap: 6 }}>
               {al.alerts.slice(0, 5).map((a, i) => (
-                <div key={i} onClick={() => navigate('/alertas')} style={{ display: 'flex', gap: 10, alignItems: 'baseline', padding: '7px 10px', borderRadius: 8, background: 'var(--surface-2)', cursor: 'pointer', fontSize: 13 }}>
+                <div key={i} className="sr-alert-row" onClick={() => navigate('/alertas')} style={{ display: 'flex', gap: 10, alignItems: 'baseline', padding: '7px 10px', borderRadius: 8, background: 'var(--surface-2)', cursor: 'pointer', fontSize: 13 }}>
                   <span style={{ width: 8, height: 8, borderRadius: '50%', background: a.severity === 'critical' ? 'var(--crit)' : a.severity === 'warning' ? 'var(--warn)' : 'var(--info)', flexShrink: 0, position: 'relative', top: -1 }} />
                   <span style={{ fontWeight: 600, color: 'var(--ink)' }}>{a.title}</span>
-                  <span style={{ color: 'var(--muted)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.detail}</span>
+                  <span className="sr-alert-detail" style={{ color: 'var(--muted)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.detail}</span>
                   <span style={{ fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>{eurK(a.value)}</span>
                 </div>
               ))}
